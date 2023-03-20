@@ -1,6 +1,8 @@
 
 import java.net.*;
 import java.io.*;
+import java.util.LinkedList;
+import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class ServerUrlList extends Thread{
@@ -10,7 +12,8 @@ public class ServerUrlList extends Thread{
 
     public void run(){
 
-        Urls.add("https://pt.wikipedia.org/wiki/Eliseu_Pereira_dos_Santos");
+        //Urls.add("https://pt.wikipedia.org/wiki/Eliseu_Pereira_dos_Santos");
+        Urls.add("https://inforestudante.uc.pt/nonio/security/login.do");
 
         try (ServerSocket listenSocket = new ServerSocket(serverPort)) {
             System.out.println("A escuta no porto 6000");
@@ -20,7 +23,7 @@ public class ServerUrlList extends Thread{
                 System.out.println("CLIENT_SOCKET (created at accept())=" + clientSocket);
 
                 //Nova Thread para o canal de comunicaçao TCP
-                new Connection(clientSocket, Urls.take());
+                new Connection(clientSocket, Urls.take(), Urls);
 
             }
         } catch(IOException e) {
@@ -40,31 +43,43 @@ class Connection extends Thread {
     Socket clientSocket;
     String link;
 
-    public Connection (Socket aClientSocket, String url) {
+    LinkedBlockingQueue<String> Urls;
+
+    public Connection (Socket aClientSocket, String url, LinkedBlockingQueue<String> urls) {
         try{
             clientSocket = aClientSocket;
             link = url;
+            Urls = urls;
             in = new DataInputStream(clientSocket.getInputStream());
             out = new DataOutputStream(clientSocket.getOutputStream());
             this.start();
         }catch(IOException e){System.out.println("Connection:" + e.getMessage());}
     }
-    //=============================
+
     public void run(){
         String resposta;
         try {
             while(true){
                 String data = in.readUTF();
-                //System.out.println("T[" + thread_number + "] Recebeu: "+data);
-                if (data.equals("Type | new_url")) {
+                System.out.println("teste\n");
+                String[] buffer = data.split(";");
+
+                //Downloader pede link ao ServerUrlList
+                if (buffer[0].equals("Type | new_url")) {
                     out.writeUTF(link);
-                } else if (data.equals("Type | url_list")) {
+
+                }
+                //Downloader envia lista de urls ao ServerUrlList encontrados no link enviado
+                //Termina a thread connection
+                else if (buffer[0].equals("Type | url_list")) {
                     out.writeUTF("Links received!");
+
                     break;
+
                 }
 
-                resposta=data.toUpperCase();
-                out.writeUTF(resposta);
+                //resposta=data.toUpperCase();
+                //out.writeUTF(resposta);
             }
         } catch(EOFException e) {
             System.out.println("EOF:" + e);
