@@ -11,12 +11,12 @@ public class ServerUrlList extends Thread{
     private static int serverPort = 6000;
 
     public void run(){
-
+        //System.out.println("testestetestetse\n");
         //Urls.add("https://pt.wikipedia.org/wiki/Eliseu_Pereira_dos_Santos");
-        Urls.add("https://inforestudante.uc.pt/nonio/security/login.do");
+        //Urls.add("https://inforestudante.uc.pt/nonio/security/login.do");
 
         try (ServerSocket listenSocket = new ServerSocket(serverPort)) {
-            System.out.println("A escuta no porto 6000");
+            //System.out.println("A escuta no porto 6000");
             System.out.println("LISTEN SOCKET=" + listenSocket);
             while(true) {
                 Socket clientSocket = listenSocket.accept(); // BLOQUEANTE
@@ -61,7 +61,7 @@ class Connection extends Thread {
         try {
             while(true){
                 String data = in.readUTF();
-                System.out.println("teste\n");
+                //System.out.println("teste\n");
                 String[] buffer = data.split(";");
 
                 //Downloader pede link ao ServerUrlList
@@ -72,10 +72,8 @@ class Connection extends Thread {
                 //Downloader envia lista de urls ao ServerUrlList encontrados no link enviado
                 //Termina a thread connection
                 else if (buffer[0].equals("Type | url_list")) {
-                    out.writeUTF("Links received!");
-
+                    out.writeUTF("Link(s) received!");
                     break;
-
                 }
 
                 //resposta=data.toUpperCase();

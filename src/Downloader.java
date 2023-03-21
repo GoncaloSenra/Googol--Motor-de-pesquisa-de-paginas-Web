@@ -32,30 +32,30 @@ public class Downloader extends Thread {
             try (Socket s = new Socket("localhost", serversocket)) {
                 System.out.println("SOCKET=" + s);
 
-            DataInputStream in = new DataInputStream(s.getInputStream());
-            DataOutputStream out = new DataOutputStream(s.getOutputStream());
+                DataInputStream in = new DataInputStream(s.getInputStream());
+                DataOutputStream out = new DataOutputStream(s.getOutputStream());
 
 
-            out.writeUTF("Type | new_url");
+                out.writeUTF("Type | new_url");
 
-            String url = in.readUTF();
+                String url = in.readUTF();
 
-            System.out.println("Url: " + url);
+                System.out.println("Url: " + url);
 
-            ArrayList<String> links = Crawler(url);
-            String message = "Type | url_list; item_count | " + links.size() + "; ";
+                ArrayList<String> links = Crawler(url);
+                String message = "Type | url_list; item_count | " + links.size() + "; ";
 
-            for (String str: links) {
-                message = message + ("item | " + str + "; ");
-            }
+                for (String str: links) {
+                    message = message + ("item | " + str + "; ");
+                }
 
-            System.out.println(message);
+                System.out.println(message);
 
-            out.writeUTF("Type | url_list; item_count | 2");
+                out.writeUTF("Type | url_list; item_count | 2");
 
-            String response = in.readUTF();
+                String response = in.readUTF();
 
-            System.out.println("teste: " + response);
+                System.out.println("teste: " + response);
 
 
             } catch (UnknownHostException e) {
@@ -63,7 +63,7 @@ public class Downloader extends Thread {
             } catch (EOFException e) {
                 System.out.println("EOF:" + e.getMessage());
             } catch (IOException e) {
-                System.out.println("IO:" + e.getMessage());
+                //System.out.println("IO:" + e.getMessage());
             }
         }
     }
