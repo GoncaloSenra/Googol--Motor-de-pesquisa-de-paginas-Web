@@ -1,4 +1,6 @@
 
+package SearchModule;
+
 import java.rmi.*;
 
 public interface SMInterface extends Remote{

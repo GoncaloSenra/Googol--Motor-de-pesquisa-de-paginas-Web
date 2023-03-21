@@ -1,6 +1,9 @@
 
+package Client;
+
 import java.rmi.registry.LocateRegistry;
 import java.util.Scanner;
+import SearchModule.SMInterface;
 
 public class Client {
 

@@ -1,3 +1,6 @@
+
+package StorageBarrel;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.DatagramPacket;
@@ -8,10 +11,13 @@ import java.util.HashSet;
 
 public class StorageBarrel extends Thread {
 
-    HashMap<String, HashSet<String>> index = new HashMap<>();
+    private HashMap<String, HashSet<String>> index;
+
+    public StorageBarrel() {
+        this.index = new HashMap<>();
+    }
 
     public static void main(String[] args) {
-
         StorageBarrel barrel = new StorageBarrel();
         barrel.start();
     }

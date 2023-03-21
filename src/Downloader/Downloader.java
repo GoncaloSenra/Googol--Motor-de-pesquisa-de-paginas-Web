@@ -1,3 +1,6 @@
+
+package Downloader;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -8,8 +11,6 @@ import java.io.*;
 import java.util.StringTokenizer;
 import java.util.concurrent.SynchronousQueue;
 import java.util.ArrayList;
-
-
 
 public class Downloader extends Thread {
 
@@ -95,3 +96,4 @@ public class Downloader extends Thread {
         return arraylinks;
     }
 }
+

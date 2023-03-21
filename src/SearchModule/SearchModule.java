@@ -1,4 +1,6 @@
 
+package SearchModule;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
@@ -9,8 +11,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.ArrayList;
-import java.util.StringTokenizer;
+
 
 public class SearchModule extends UnicastRemoteObject implements SMInterface {
 
