@@ -3,8 +3,24 @@ import java.io.Serializable;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.util.HashMap;
+import java.util.HashSet;
 
 public class StorageBarrel extends Thread {
+
+    HashMap<String, HashSet<String>> index = new HashMap<>();
+
+    public static void main(String[] args) {
+
+        StorageBarrel barrel = new StorageBarrel();
+        barrel.start();
+    }
+
+    public void run() {
+
+    }
+
+    /*
     private String MULTICAST_ADDRESS = "224.3.2.1";
     private int PORT = 4321;
 
@@ -35,5 +51,6 @@ public class StorageBarrel extends Thread {
             socket.close();
         }
     }
+    */
 
 }

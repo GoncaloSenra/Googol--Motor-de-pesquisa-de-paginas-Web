@@ -8,8 +8,12 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class ServerUrlList extends Thread{
 
-    LinkedBlockingQueue<String> Urls = new LinkedBlockingQueue<>();
+    private LinkedBlockingQueue<String> Urls;
     private static int serverPort = 6000;
+
+    public ServerUrlList() {
+        this.Urls = new LinkedBlockingQueue<>();
+    }
 
     public void run(){
         //System.out.println("testestetestetse\n");
