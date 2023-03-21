@@ -71,11 +71,9 @@ class Connection extends Thread {
                 out.writeUTF("Link(s) received!");
                 String[] aux = buffer[1].split("\\| ");
                 num_links = Integer.parseInt(aux[1]);
-                System.out.println("1: " + Arrays.toString(aux));
+
                 for (int i = 2; i < num_links + 2; i++) {
-                    System.out.println("aqui");
                     aux = buffer[i].split("\\| ");
-                    System.out.println("2: " + Arrays.toString(aux));
                     Urls.add(aux[1]);
                 }
 

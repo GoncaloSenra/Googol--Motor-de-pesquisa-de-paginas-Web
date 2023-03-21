@@ -12,6 +12,7 @@ public class Client {
             String response;
             String[] splited;
             while(true) {
+                System.out.print("> ");
                 message = sc.nextLine();
                 splited = message.split(" ");
                 if (splited[0].equals("index")) {
@@ -19,7 +20,6 @@ public class Client {
                 } else {
                     response = "Command not found";
                 }
-
 
                 System.out.println(response);
 

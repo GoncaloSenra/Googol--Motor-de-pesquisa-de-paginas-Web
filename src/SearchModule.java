@@ -23,18 +23,19 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
     public String IndexUrl(String url) throws RemoteException {
         //System.out.println("print do lado do servidor...!.");
         String message = "Type | url_list; item_count | 1; item | " + url;
+        String response = null;
         try (Socket s = new Socket("localhost", serversocket)) {
             //System.out.println("SOCKET=" + s);
 
             DataInputStream in = new DataInputStream(s.getInputStream());
             DataOutputStream out = new DataOutputStream(s.getOutputStream());
 
-            System.out.println("SM: " +  message);
+            //System.out.println("SM: " +  message);
             out.writeUTF(message);
 
-            String response = in.readUTF();
+            response = in.readUTF();
 
-            System.out.println("Response: " + response);
+            response = ("Response: " + response);
 
 
         } catch (UnknownHostException e) {
@@ -45,7 +46,7 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
             System.out.println("IO:" + e.getMessage());
         }
 
-        return "Hello, World!";
+        return response;
     }
     public static void main(String[] args) {
         try {
@@ -54,9 +55,9 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
             SearchModule h = new SearchModule();
             Registry r = LocateRegistry.createRegistry(6666);
             r.rebind("XPTO", h);
-            System.out.println("Hello Server ready.");
+            System.out.println("Search Module Server ready!");
         } catch (RemoteException re) {
-            System.out.println("Exception in HelloImpl.main: " + re);
+            System.out.println("Exception in SM.main: " + re);
         }
     }
 
