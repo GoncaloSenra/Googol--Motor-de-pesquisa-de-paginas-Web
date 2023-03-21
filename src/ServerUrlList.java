@@ -1,6 +1,7 @@
 
 import java.net.*;
 import java.io.*;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -23,13 +24,11 @@ public class ServerUrlList extends Thread{
                 System.out.println("CLIENT_SOCKET (created at accept())=" + clientSocket);
 
                 //Nova Thread para o canal de comunicaçao TCP
-                new Connection(clientSocket, Urls.take(), Urls);
+                new Connection(clientSocket, Urls);
 
             }
         } catch(IOException e) {
             System.out.println("Listen:" + e.getMessage());
-        } catch (InterruptedException e) {
-            System.out.println("Queue:" + e.getMessage());
         }
 
 
@@ -41,14 +40,12 @@ class Connection extends Thread {
     DataInputStream in;
     DataOutputStream out;
     Socket clientSocket;
-    String link;
 
     LinkedBlockingQueue<String> Urls;
 
-    public Connection (Socket aClientSocket, String url, LinkedBlockingQueue<String> urls) {
+    public Connection (Socket aClientSocket, LinkedBlockingQueue<String> urls) {
         try{
             clientSocket = aClientSocket;
-            link = url;
             Urls = urls;
             in = new DataInputStream(clientSocket.getInputStream());
             out = new DataOutputStream(clientSocket.getOutputStream());
@@ -59,30 +56,41 @@ class Connection extends Thread {
     public void run(){
         String resposta;
         try {
-            while(true){
-                String data = in.readUTF();
-                //System.out.println("teste\n");
-                String[] buffer = data.split(";");
+            String data = in.readUTF();
+            //System.out.println("teste\n");
+            String[] buffer = data.split(";");
 
-                //Downloader pede link ao ServerUrlList
-                if (buffer[0].equals("Type | new_url")) {
-                    out.writeUTF(link);
-
-                }
-                //Downloader envia lista de urls ao ServerUrlList encontrados no link enviado
-                //Termina a thread connection
-                else if (buffer[0].equals("Type | url_list")) {
-                    out.writeUTF("Link(s) received!");
-                    break;
-                }
-
-                //resposta=data.toUpperCase();
-                //out.writeUTF(resposta);
+            //Downloader pede link ao ServerUrlList
+            if (buffer[0].equals("Type | new_url")) {
+                out.writeUTF(Urls.take());
             }
+            //Downloader envia lista de urls ao ServerUrlList encontrados no link enviado
+            //Termina a thread connection
+            else if (buffer[0].equals("Type | url_list")) {
+                int num_links = 0;
+                out.writeUTF("Link(s) received!");
+                String[] aux = buffer[1].split("\\| ");
+                num_links = Integer.parseInt(aux[1]);
+                System.out.println("1: " + Arrays.toString(aux));
+                for (int i = 2; i < num_links + 2; i++) {
+                    System.out.println("aqui");
+                    aux = buffer[i].split("\\| ");
+                    System.out.println("2: " + Arrays.toString(aux));
+                    Urls.add(aux[1]);
+                }
+
+            }
+
+            //resposta=data.toUpperCase();
+            //out.writeUTF(resposta);
+
         } catch(EOFException e) {
             System.out.println("EOF:" + e);
         } catch(IOException e) {
             System.out.println("IO:" + e);
+        } catch (InterruptedException e) {
+            System.out.println("IE:" + e);
         }
     }
 }
+
