@@ -13,7 +13,7 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 
-import StorageBarrel.StorageBarrel;
+import StorageBarrel.SBInterface;
 
 
 public class SearchModule extends UnicastRemoteObject implements SMInterface {
@@ -22,8 +22,19 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
 
     private static int numBarrels = 2;
 
+    public static ArrayList<SBInterface> barrels = new ArrayList<>();
+
+    public static ArrayList<String> names = new ArrayList<>();
+
     public SearchModule() throws RemoteException {
         super();
+    }
+
+    public void NewBarrel(SBInterface Ibarrel, String name) throws RemoteException {
+        names.add(name);
+        barrels.add(Ibarrel);
+
+        System.out.println("NEW BARREL -> " + name);
     }
 
     public String IndexUrl(String url) throws RemoteException {
@@ -54,21 +65,21 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
 
         return response;
     }
+
+
     public static void main(String[] args) {
         try {
-            ArrayList<StorageBarrel> barrels = new ArrayList<>();
             ServerUrlList UrlList = new ServerUrlList();
             UrlList.start();
 
-            for (int i = 0; i < numBarrels; i++) {
-                StorageBarrel auxBarrel = new StorageBarrel(i);
-                auxBarrel.start();
-                barrels.add(auxBarrel);
-            }
-
             SearchModule h = new SearchModule();
-            Registry r = LocateRegistry.createRegistry(6666);
-            r.rebind("XPTO", h);
+
+            Registry c = LocateRegistry.createRegistry(6666);
+            c.rebind("Client", h);
+
+            Registry b = LocateRegistry.createRegistry(7777);
+            b.rebind("Barrel", h);
+
             System.out.println("Search Module Server ready!");
         } catch (RemoteException re) {
             System.out.println("Exception in SM.main: " + re);

@@ -28,6 +28,7 @@ public class Downloader extends Thread {
     public void run() {
         //String url = args[0];
         //String url = "https://pt.wikipedia.org/wiki/Eliseu_Pereira_dos_Santos";
+        String regex =  "(http|https|ftp)://[\\w_-]+(\\.[\\w_-]+)+([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?";
 
         try (Socket s = new Socket("localhost", serversocket)) {
 
@@ -37,25 +38,37 @@ public class Downloader extends Thread {
             DataOutputStream out = new DataOutputStream(s.getOutputStream());
 
             while(true) {
+                Pattern p = Pattern.compile(regex);
+
                 out.writeUTF("Type | new_url");
                 String url = in.readUTF();
 
                 System.out.println("Url: " + url);
 
-                ArrayList<String> links = CrawlerUrls(url);
-                ArrayList<String> words = CrawlerWords(url);
+                if (p.matcher(url).matches()) {
+                    ArrayList<String> links = CrawlerUrls(url);
+                    ArrayList<String> words = CrawlerWords(url);
 
-                String message = "Type | url_list; item_count | " + links.size() + "; ";
+                    String message = "Type | url_list; item_count | " + links.size() + "; ";
 
-                for (String str : links) {
-                    message = message + ("item | " + str + "; ");
+                    for (String str : links) {
+                        message = message + ("item | " + str + "; ");
+                    }
+
+                    System.out.println(message);
+                    out.writeUTF(message);
+
+                    String response = in.readUTF();
+                    System.out.println("Response: " + response);
+                } else {
+                    String message = "Type | url_list; item_count | 0";
+
+                    System.out.println(message);
+                    out.writeUTF(message);
+
+                    String response = in.readUTF();
+                    System.out.println("Response: " + response);
                 }
-
-                System.out.println(message);
-                out.writeUTF(message);
-
-                String response = in.readUTF();
-                System.out.println("Response: " + response);
             }
 
         } catch (IllegalArgumentException e) {
@@ -94,24 +107,13 @@ public class Downloader extends Thread {
     public ArrayList<String> CrawlerUrls(String url) {
         ArrayList<String> arraylinks = new ArrayList<>();
         try {
-            String regex =  "(http|https|ftp)://[\\w_-]+(\\.[\\w_-]+)+([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?";
-            Pattern p = Pattern.compile(regex);
-
 
             Document doc = Jsoup.connect(url).get();
-            /*StringTokenizer tokens = new StringTokenizer(doc.text());
-
-            while (tokens.hasMoreElements()) {
-                String word = tokens.nextToken().toLowerCase();
-                System.out.println(word);
-                //this.words.add(word);
-            }*/
 
             Elements links = doc.select("a[href]");
             for (Element link : links) {
                 System.out.println(link.text() + "\n" + link.attr("abs:href") + "\n");
-                if ((p.matcher(link.attr("abs:href"))).matches())
-                    arraylinks.add(link.attr("abs:href"));
+                arraylinks.add(link.attr("abs:href"));
             }
 
 

@@ -8,17 +8,18 @@ import SearchModule.SMInterface;
 //O SM tambem vai ter de ter um interfce do cliente para poder mandar as infos de administracao
 //quando existem alteraçoes o SM chama uma funçao do cliente (RMI callback)
 
-
 public class Client {
 
     public static void main(String args[]) {
         try {
-            SMInterface h = (SMInterface) LocateRegistry.getRegistry(6666).lookup("XPTO");
+            SMInterface h = (SMInterface) LocateRegistry.getRegistry(6666).lookup("Client");
             Scanner sc = new Scanner(System.in);
             String message;
             String response;
             String[] splited;
             while(true) {
+
+
                 System.out.print("> ");
                 message = sc.nextLine();
                 splited = message.split(" ");
