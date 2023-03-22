@@ -5,6 +5,10 @@ import java.rmi.registry.LocateRegistry;
 import java.util.Scanner;
 import SearchModule.SMInterface;
 
+//O SM tambem vai ter de ter um interfce do cliente para poder mandar as infos de administracao
+//quando existem alteraçoes o SM chama uma funçao do cliente (RMI callback)
+
+
 public class Client {
 
     public static void main(String args[]) {

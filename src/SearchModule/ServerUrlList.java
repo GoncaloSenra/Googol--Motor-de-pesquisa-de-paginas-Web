@@ -18,9 +18,8 @@ public class ServerUrlList extends Thread{
     }
 
     public void run(){
-        //System.out.println("testestetestetse\n");
-        //Urls.add("https://pt.wikipedia.org/wiki/Eliseu_Pereira_dos_Santos");
-        //Urls.add("https://inforestudante.uc.pt/nonio/security/login.do");
+        //index https://inforestudante.uc.pt/nonio/security/login.do
+        //index https://pt.wikipedia.org/wiki/Eliseu_Pereira_dos_Santos
 
         try (ServerSocket listenSocket = new ServerSocket(serverPort)) {
             //System.out.println("A escuta no porto 6000");
@@ -62,32 +61,50 @@ class Connection extends Thread {
     public void run(){
         String resposta;
         try {
-            String data = in.readUTF();
-            //System.out.println("teste\n");
-            String[] buffer = data.split(";");
+            while(true) {
+                String data = in.readUTF();
 
-            //Downloader pede link ao ServerUrlList
-            if (buffer[0].equals("Type | new_url")) {
-                out.writeUTF(Urls.take());
-            }
-            //Downloader envia lista de urls ao ServerUrlList encontrados no link enviado
-            //Termina a thread connection
-            else if (buffer[0].equals("Type | url_list")) {
-                int num_links = 0;
-                out.writeUTF("Link(s) received!");
-                String[] aux = buffer[1].split("\\| ");
-                num_links = Integer.parseInt(aux[1]);
+                String[] buffer = data.split(";");
 
-                for (int i = 2; i < num_links + 2; i++) {
-                    aux = buffer[i].split("\\| ");
-                    Urls.add(aux[1]);
+                //Downloader pede link ao ServerUrlList
+                if (buffer[0].equals("Type | new_url")) {
+                    out.writeUTF(Urls.take());
+
+                    data = in.readUTF();
+                    buffer = data.split(";");
+                    int num_links = 0;
+                    out.writeUTF("Link(s) received!");
+                    System.out.println(data);
+                    String[] aux = null;
+                    aux = buffer[1].split("\\| ");
+                    num_links = Integer.parseInt(aux[1]);
+                    System.out.println("num_links: "+ num_links);
+                    for (int i = 2; i < num_links + 2; i++) {
+                        aux = buffer[i].split("\\| ");
+                        //System.out.println(Arrays.toString(aux));
+                        if (aux.length == 2)
+                            Urls.add(aux[1]);
+                    }
+                }
+                //Downloader envia lista de urls ao ServerUrlList encontrados no link enviado
+                //Termina a thread connection
+                else if (buffer[0].equals("Type | url_list")) {
+                    System.out.println(data);
+                    int num_links = 0;
+                    out.writeUTF("Link(s) received!");
+                    String[] aux = buffer[1].split("\\| ");
+                    num_links = Integer.parseInt(aux[1]);
+
+                    for (int i = 2; i < num_links + 2; i++) {
+                        aux = buffer[i].split("\\| ");
+                        Urls.add(aux[1]);
+                    }
+                    return;
                 }
 
+                //resposta=data.toUpperCase();
+                //out.writeUTF(resposta);
             }
-
-            //resposta=data.toUpperCase();
-            //out.writeUTF(resposta);
-
         } catch(EOFException e) {
             System.out.println("EOF:" + e);
         } catch(IOException e) {

@@ -11,11 +11,16 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
+
+import StorageBarrel.StorageBarrel;
 
 
 public class SearchModule extends UnicastRemoteObject implements SMInterface {
 
     private static int serversocket = 6000;
+
+    private static int numBarrels = 2;
 
     public SearchModule() throws RemoteException {
         super();
@@ -51,8 +56,16 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
     }
     public static void main(String[] args) {
         try {
+            ArrayList<StorageBarrel> barrels = new ArrayList<>();
             ServerUrlList UrlList = new ServerUrlList();
             UrlList.start();
+
+            for (int i = 0; i < numBarrels; i++) {
+                StorageBarrel auxBarrel = new StorageBarrel(i);
+                auxBarrel.start();
+                barrels.add(auxBarrel);
+            }
+
             SearchModule h = new SearchModule();
             Registry r = LocateRegistry.createRegistry(6666);
             r.rebind("XPTO", h);
