@@ -18,13 +18,20 @@ public class Client {
             String response;
             String[] splited;
             while(true) {
-
-
+                System.out.println("1 - Index link (1 <url>)\n" +
+                        "2 - Search (2 <words>)"
+                );
                 System.out.print("> ");
                 message = sc.nextLine();
                 splited = message.split(" ");
-                if (splited[0].equals("index")) {
+                if (splited[0].equals("1")) {
                     response = h.IndexUrl(splited[1]);
+                } else if (splited[0].equals("2")) {
+                    String[] aux = new String[splited.length - 1];
+                    for (int i = 1; i < splited.length; i++) {
+                        aux[i-1] = splited[i];
+                    }
+                    response = h.SearchLinks(aux);
                 } else {
                     response = "Command not found";
                 }

@@ -12,6 +12,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 import StorageBarrel.SBInterface;
 
@@ -20,7 +21,7 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
 
     private static int serversocket = 6000;
 
-    private static int numBarrels = 2;
+    //private static int numBarrels = 2;
 
     public static ArrayList<SBInterface> barrels = new ArrayList<>();
 
@@ -35,6 +36,22 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
         barrels.add(Ibarrel);
 
         System.out.println("NEW BARREL -> " + name);
+    }
+
+    public String SearchLinks(String[] words) throws RemoteException {
+
+        String message = "";
+        HashSet<String> aux = barrels.get(0).SearchWords(words);
+
+        if (aux == null) {
+            return "Links not found!\n";
+        } else {
+            for (String link: aux) {
+                message += link + "\n";
+            }
+        }
+
+        return message;
     }
 
     public String IndexUrl(String url) throws RemoteException {
