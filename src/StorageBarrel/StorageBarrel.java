@@ -19,19 +19,19 @@ import SearchModule.SMInterface;
 import javax.print.attribute.HashPrintServiceAttributeSet;
 
 
-public class StorageBarrel extends UnicastRemoteObject implements SBInterface, Serializable{
+public class StorageBarrel extends UnicastRemoteObject implements SBInterface, Serializable {
 
     public HashMap<String, HashSet<String>> index;
 
     private int Id;
 
-    public StorageBarrel(int id) throws RemoteException{
+    public StorageBarrel(int id) throws RemoteException {
         super();
         this.index = new HashMap<>();
         this.Id = id;
     }
 
-    public HashSet<String> SearchWords(String[] words){
+    public HashSet<String> SearchWords(String[] words) {
 
         ArrayList<HashSet<String>> set_links = new ArrayList<>();
 
@@ -50,7 +50,7 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
         }
 
         HashSet<String> common = new HashSet<>(set_links.get(0));
-        for (HashSet<String> links: set_links){
+        for (HashSet<String> links : set_links) {
             common.retainAll(links);
         }
 
@@ -83,7 +83,7 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
             //System.out.println(barrel.index);
 
             try {
-                File file = new File("src/StorageBarrel/hashmap"+barrel.Id+".obj");
+                File file = new File("src/StorageBarrel/hashmap" + barrel.Id + ".obj");
                 if (!file.exists()) {
                     file.createNewFile();
                 }
@@ -100,7 +100,7 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
                 System.out.println("OOS: " + e);
             }
 
-            while(true) {
+            while (true) {
                 continue;
             }
 
@@ -109,17 +109,15 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
             System.out.println("Exception in SB.main: " + e);
         }
     }
+}
 
-    /*
+class MulticastClientBarrel extends Thread {
     private String MULTICAST_ADDRESS = "224.3.2.1";
     private int PORT = 4321;
 
-    public static void main(String[] args) {
-        StorageBarrel barrel = new StorageBarrel();
-        barrel.start();
+    public MulticastClientBarrel() {
+
     }
-
-
     public void run() {
         MulticastSocket socket = null;
         try {
@@ -141,6 +139,6 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
             socket.close();
         }
     }
-    */
-
 }
+
+

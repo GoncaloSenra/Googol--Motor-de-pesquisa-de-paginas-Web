@@ -9,8 +9,12 @@ import org.jsoup.select.Elements;
 import java.net.*;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
+
+import SearchModule.URL;
+
 
 public class Downloader extends Thread {
 
@@ -23,6 +27,8 @@ public class Downloader extends Thread {
     public static void main(String[] args) {
         Downloader d = new Downloader();
         d.start();
+        MulticastServerDownloader msd = new MulticastServerDownloader();
+        msd.start();
     }
 
     public void run() {
@@ -45,9 +51,23 @@ public class Downloader extends Thread {
 
                 System.out.println("Url: " + url);
 
+                ArrayList<String> links = null;
+                ArrayList<String> words = null;
+
                 if (p.matcher(url).matches()) {
-                    ArrayList<String> links = CrawlerUrls(url);
-                    ArrayList<String> words = CrawlerWords(url);
+                    try {
+                        Document doc = Jsoup.connect(url).get();
+
+                        links = CrawlerUrls(url, doc);
+                        words = CrawlerWords(url, doc);
+                        String title = doc.title();
+                        //TODO: Falta citaçao
+
+                        URL link = new URL(url, title);
+                    } catch (IOException e) {
+                        System.out.println("Jsoup Connection: " + e.getMessage());
+                    }
+
 
                     String message = "Type | url_list; item_count | " + links.size() + "; ";
 
@@ -84,55 +104,49 @@ public class Downloader extends Thread {
 
     }
 
-    public ArrayList<String> CrawlerWords(String url) {
+    public ArrayList<String> CrawlerWords(String url, Document doc) {
         ArrayList<String> arraywords = new ArrayList<>();
-        try {
 
-            Document doc = Jsoup.connect(url).get();
-            StringTokenizer tokens = new StringTokenizer(doc.text());
+        //Document doc = Jsoup.connect(url).get();
+        StringTokenizer tokens = new StringTokenizer(doc.text());
 
-            while (tokens.hasMoreElements()) {
-                String word = tokens.nextToken().toLowerCase();
-                arraywords.add(word);
-                //System.out.println(word);
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
+        while (tokens.hasMoreElements()) {
+            String word = tokens.nextToken().toLowerCase();
+            arraywords.add(word);
+            //System.out.println(word);
         }
 
         return arraywords;
     }
 
-    public ArrayList<String> CrawlerUrls(String url) {
+    public ArrayList<String> CrawlerUrls(String url, Document doc) {
         ArrayList<String> arraylinks = new ArrayList<>();
-        try {
 
-            Document doc = Jsoup.connect(url).get();
+        //Document doc = Jsoup.connect(url).get();
 
-            Elements links = doc.select("a[href]");
-            for (Element link : links) {
-                System.out.println(link.text() + "\n" + link.attr("abs:href") + "\n");
-                arraylinks.add(link.attr("abs:href"));
-            }
-
-
-        } catch (IOException e) {
-            System.out.println("IO: " + e.getMessage());
+        Elements links = doc.select("a[href]");
+        for (Element link : links) {
+            System.out.println(link.text() + "\n" + link.attr("abs:href") + "\n");
+            arraylinks.add(link.attr("abs:href"));
         }
+
 
         return arraylinks;
     }
 }
 
-class MulticastDownloader extends Thread {
+class MulticastServerDownloader extends Thread {
 
     private String MULTICAST_ADDRESS = "224.3.2.1";
     private int PORT = 4321;
     private long SLEEP_TIME = 5000;
+    public boolean send_packet;
+    public HashMap<URL, ArrayList<String>> packet;
 
-    public MulticastDownloader() {
+    public MulticastServerDownloader() {
         super("Server " + (long) (Math.random() * 1000));
+        this.send_packet = false;
+        this.packet = new HashMap<>();
     }
 
     public void run() {
@@ -141,14 +155,21 @@ class MulticastDownloader extends Thread {
         System.out.println(this.getName() + " running...");
         try {
             socket = new MulticastSocket();  // create socket without binding it (only for sending)
+            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+            ObjectOutputStream out = new ObjectOutputStream(bytes);
+
+
             while (true) {
-                String message = this.getName() + " packet " + counter++;
-                byte[] buffer = message.getBytes();
-                InetAddress group = InetAddress.getByName(MULTICAST_ADDRESS);
 
-                DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, PORT);
-                socket.send(packet);
+                if(this.send_packet) {
+                    InetAddress group = InetAddress.getByName(MULTICAST_ADDRESS);
+                    out.writeObject(packet);
 
+                    byte[] buffer = bytes.toByteArray();
+
+                    DatagramPacket Dpacket = new DatagramPacket(buffer, buffer.length, group, PORT);
+                    socket.send(Dpacket);
+                }
                 try { sleep((long) (Math.random() * SLEEP_TIME)); } catch (InterruptedException e) { }
             }
         } catch (IOException e) {
