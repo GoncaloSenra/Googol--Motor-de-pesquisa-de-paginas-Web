@@ -22,7 +22,6 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
     private static int serversocket = 6000;
 
     //private static int numBarrels = 2;
-
     public static ArrayList<SBInterface> barrels = new ArrayList<>();
 
     public static ArrayList<String> names = new ArrayList<>();

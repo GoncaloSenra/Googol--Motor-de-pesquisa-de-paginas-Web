@@ -82,7 +82,7 @@ class Connection extends Thread {
                     for (int i = 2; i < num_links + 2; i++) {
                         aux = buffer[i].split("\\| ");
                         //System.out.println(Arrays.toString(aux));
-                        if (aux.length == 2)
+                        if (aux.length == 2 && !Urls.contains(aux[1]))
                             Urls.add(aux[1]);
                     }
                 }
