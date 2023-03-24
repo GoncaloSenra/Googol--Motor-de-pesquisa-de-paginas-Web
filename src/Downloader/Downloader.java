@@ -19,6 +19,8 @@ import SearchModule.URL;
 public class Downloader extends Thread {
 
     private static int serversocket = 6000;
+    private String MULTICAST_ADDRESS = "224.3.2.1";
+    private int PORT = 4321;
 
 
     //private ArrayList<String> words;
@@ -35,6 +37,8 @@ public class Downloader extends Thread {
 
         String regex =  "(http|https|ftp)://[\\w_-]+(\\.[\\w_-]+)+([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?";
 
+        MulticastSocket socket = null;
+
         // Run Multicast Server
         MulticastServerDownloader msd = new MulticastServerDownloader();
         msd.start();
@@ -47,63 +51,86 @@ public class Downloader extends Thread {
 
             System.out.println("SOCKET=" + s);
 
-            DataInputStream in = new DataInputStream(s.getInputStream());
-            DataOutputStream out = new DataOutputStream(s.getOutputStream());
+            try {
+                socket = new MulticastSocket();  // create socket without binding it (only for sending)
 
-            while(true) {
-                Pattern p = Pattern.compile(regex);
+                DataInputStream in = new DataInputStream(s.getInputStream());
+                DataOutputStream out = new DataOutputStream(s.getOutputStream());
 
-                out.writeUTF("Type | new_url");
-                String url = in.readUTF();
+                while (true) {
+                    Pattern p = Pattern.compile(regex);
 
-                System.out.println("Url: " + url);
+                    out.writeUTF("Type | new_url");
+                    String url = in.readUTF();
 
-                ArrayList<String> links = null;
-                ArrayList<String> words = null;
-                String title = "";
+                    System.out.println("Url: " + url);
 
-                if (p.matcher(url).matches()) {
-                    try {
-                        Document doc = Jsoup.connect(url).get();
+                    ArrayList<String> links = null;
+                    ArrayList<String> words = null;
+                    String title = "";
 
-                        links = CrawlerUrls(url, doc);
-                        words = CrawlerWords(url, doc);
-                        title = doc.title();
-                        //TODO: Falta citaçao
+                    if (p.matcher(url).matches()) {
+                        try {
+                            Document doc = Jsoup.connect(url).get();
+
+                            links = CrawlerUrls(url, doc);
+                            words = CrawlerWords(url, doc);
+                            title = doc.title();
+                            //TODO: Falta citaçao
 
 
-                    } catch (IOException e) {
-                        System.out.println("Jsoup Connection: " + e.getMessage());
-                    }
-
-                    String message = "";
-
-                    if (links != null){
-                        message = "Type | url_list; item_count | " + links.size() + "; ";
-                        for (String str : links) {
-                            message = message + ("item | " + str + "; ");
+                        } catch (IOException e) {
+                            System.out.println("Jsoup Connection: " + e.getMessage());
                         }
 
-                        msd.packet = new URL(url, title, null, null);
-                        msd.send_packet = true;
+                        String message = "";
+
+                        if (links != null) {
+                            message = "Type | url_list; item_count | " + links.size() + "; ";
+                            for (String str : links) {
+                                message = message + ("item | " + str + "; ");
+                            }
+
+                            // Envia pacote por multicast
+
+                            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+                            ObjectOutputStream outMulticast = new ObjectOutputStream(bytes);
+
+                            System.out.println("packet arrived");
+                            InetAddress group = InetAddress.getByName(MULTICAST_ADDRESS);
+                            outMulticast.writeObject(new URL(url, title, null, null));
+                            //System.out.println(packet.getTitle());
+                            byte[] buffer = bytes.toByteArray();
+
+                            DatagramPacket Dpacket = new DatagramPacket(buffer, buffer.length, group, PORT);
+                            socket.send(Dpacket);
+
+                            bytes.close();
+                            outMulticast.close();
+
+                        } else {
+                            message = "Type | url_list; item_count | 0";
+                        }
+
+                        System.out.println(message);
+                        out.writeUTF(message);
+
+                        String response = in.readUTF();
+                        System.out.println("Response: " + response);
                     } else {
-                        message = "Type | url_list; item_count | 0";
+                        String message = "Type | url_list; item_count | 0";
+
+                        System.out.println(message);
+                        out.writeUTF(message);
+
+                        String response = in.readUTF();
+                        System.out.println("Response: " + response);
                     }
-
-                    System.out.println(message);
-                    out.writeUTF(message);
-
-                    String response = in.readUTF();
-                    System.out.println("Response: " + response);
-                } else {
-                    String message = "Type | url_list; item_count | 0";
-
-                    System.out.println(message);
-                    out.writeUTF(message);
-
-                    String response = in.readUTF();
-                    System.out.println("Response: " + response);
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                socket.close();
             }
 
         } catch (IllegalArgumentException e) {
