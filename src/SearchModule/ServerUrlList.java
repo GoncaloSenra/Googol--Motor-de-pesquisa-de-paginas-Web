@@ -45,7 +45,6 @@ class Connection extends Thread {
     DataInputStream in;
     DataOutputStream out;
     Socket clientSocket;
-
     LinkedBlockingQueue<String> Urls;
 
     public Connection (Socket aClientSocket, LinkedBlockingQueue<String> urls) {

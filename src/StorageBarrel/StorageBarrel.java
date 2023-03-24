@@ -15,14 +15,13 @@ import java.util.HashSet;
 import java.util.Map;
 
 import SearchModule.SMInterface;
+import SearchModule.URL;
 
 import javax.print.attribute.HashPrintServiceAttributeSet;
 
 
 public class StorageBarrel extends UnicastRemoteObject implements SBInterface, Serializable {
-
     public HashMap<String, HashSet<String>> index;
-
     private int Id;
 
     public StorageBarrel(int id) throws RemoteException {
@@ -30,7 +29,6 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
         this.index = new HashMap<>();
         this.Id = id;
     }
-
     public HashSet<String> SearchWords(String[] words) {
 
         ArrayList<HashSet<String>> set_links = new ArrayList<>();
@@ -66,11 +64,14 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
 
         try {
 
+
             SMInterface sm = (SMInterface) LocateRegistry.getRegistry(7777).lookup("Barrel");
             StorageBarrel barrel = new StorageBarrel(Integer.parseInt(args[0]));
             sm.NewBarrel((SBInterface) barrel, Integer.toString(barrel.Id));
 
-            System.out.println("teste");
+            MulticastClientBarrel mcb = new MulticastClientBarrel(barrel.index);
+            mcb.start();
+
             HashSet<String> auxset = new HashSet<>();
             auxset.add("https://pt.wikipedia.org/wiki/Eliseu_Pereira_dos_Santos");
             auxset.add("https://inforestudante.uc.pt/nonio/security/login.do");
@@ -92,16 +93,11 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
                 out.writeObject(barrel.index);
                 out.close();
                 fileOut.close();
-                //System.out.println("HashMap has been serialized and stored in hashmap.ser");
 
             } catch (FileNotFoundException e) {
                 System.out.println("FOS: " + e);
             } catch (IOException e) {
                 System.out.println("OOS: " + e);
-            }
-
-            while (true) {
-                continue;
             }
 
 
@@ -114,9 +110,9 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
 class MulticastClientBarrel extends Thread {
     private String MULTICAST_ADDRESS = "224.3.2.1";
     private int PORT = 4321;
-
-    public MulticastClientBarrel() {
-
+    public HashMap<String, HashSet<String>> index;
+    public MulticastClientBarrel(HashMap<String, HashSet<String>> idx) {
+        this.index = idx;
     }
     public void run() {
         MulticastSocket socket = null;
@@ -124,20 +120,35 @@ class MulticastClientBarrel extends Thread {
             socket = new MulticastSocket(PORT);  // create socket and bind it
             InetAddress group = InetAddress.getByName(MULTICAST_ADDRESS);
             socket.joinGroup(group);
+
             while (true) {
-                byte[] buffer = new byte[256];
+                byte[] buffer = new byte[50000];
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 socket.receive(packet);
+                ByteArrayInputStream bytes = new ByteArrayInputStream(buffer);
+                ObjectInputStream in = new ObjectInputStream(bytes);
+
+                URL data = (URL) in.readObject();
 
                 System.out.println("Received packet from " + packet.getAddress().getHostAddress() + ":" + packet.getPort() + " with message:");
-                String message = new String(packet.getData(), 0, packet.getLength());
-                System.out.println(message);
+
+                System.out.println("--------> " + data.getUrl() + " " + data.getTitle());
+
+                bytes.close();
+                in.close();
             }
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
         } finally {
             socket.close();
         }
+    }
+
+    public void insertIndex() {
+
+
     }
 }
 

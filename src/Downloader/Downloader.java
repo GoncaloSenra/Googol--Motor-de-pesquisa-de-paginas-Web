@@ -19,6 +19,8 @@ import SearchModule.URL;
 public class Downloader extends Thread {
 
     private static int serversocket = 6000;
+
+
     //private ArrayList<String> words;
 
     /*public Downloader() {
@@ -27,15 +29,20 @@ public class Downloader extends Thread {
     public static void main(String[] args) {
         Downloader d = new Downloader();
         d.start();
-        MulticastServerDownloader msd = new MulticastServerDownloader();
-        msd.start();
     }
 
     public void run() {
-        //String url = args[0];
-        //String url = "https://pt.wikipedia.org/wiki/Eliseu_Pereira_dos_Santos";
+
         String regex =  "(http|https|ftp)://[\\w_-]+(\\.[\\w_-]+)+([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?";
 
+        // Run Multicast Server
+        MulticastServerDownloader msd = new MulticastServerDownloader();
+        msd.start();
+
+        msd.packet = new URL("piroca", "teste", null, null);
+        msd.send_packet = true;
+
+        // Open TCP Socket
         try (Socket s = new Socket("localhost", serversocket)) {
 
             System.out.println("SOCKET=" + s);
@@ -53,6 +60,7 @@ public class Downloader extends Thread {
 
                 ArrayList<String> links = null;
                 ArrayList<String> words = null;
+                String title = "";
 
                 if (p.matcher(url).matches()) {
                     try {
@@ -60,19 +68,26 @@ public class Downloader extends Thread {
 
                         links = CrawlerUrls(url, doc);
                         words = CrawlerWords(url, doc);
-                        String title = doc.title();
+                        title = doc.title();
                         //TODO: Falta citaçao
 
-                        URL link = new URL(url, title);
+
                     } catch (IOException e) {
                         System.out.println("Jsoup Connection: " + e.getMessage());
                     }
 
+                    String message = "";
 
-                    String message = "Type | url_list; item_count | " + links.size() + "; ";
+                    if (links != null){
+                        message = "Type | url_list; item_count | " + links.size() + "; ";
+                        for (String str : links) {
+                            message = message + ("item | " + str + "; ");
+                        }
 
-                    for (String str : links) {
-                        message = message + ("item | " + str + "; ");
+                        msd.packet = new URL(url, title, null, null);
+                        msd.send_packet = true;
+                    } else {
+                        message = "Type | url_list; item_count | 0";
                     }
 
                     System.out.println(message);
@@ -126,7 +141,7 @@ public class Downloader extends Thread {
 
         Elements links = doc.select("a[href]");
         for (Element link : links) {
-            System.out.println(link.text() + "\n" + link.attr("abs:href") + "\n");
+            //System.out.println(link.text() + "\n" + link.attr("abs:href") + "\n");
             arraylinks.add(link.attr("abs:href"));
         }
 
@@ -136,41 +151,46 @@ public class Downloader extends Thread {
 }
 
 class MulticastServerDownloader extends Thread {
-
     private String MULTICAST_ADDRESS = "224.3.2.1";
     private int PORT = 4321;
     private long SLEEP_TIME = 5000;
     public boolean send_packet;
-    public HashMap<URL, ArrayList<String>> packet;
+    public URL packet;
 
     public MulticastServerDownloader() {
         super("Server " + (long) (Math.random() * 1000));
         this.send_packet = false;
-        this.packet = new HashMap<>();
     }
 
     public void run() {
         MulticastSocket socket = null;
-        long counter = 0;
         System.out.println(this.getName() + " running...");
         try {
             socket = new MulticastSocket();  // create socket without binding it (only for sending)
-            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-            ObjectOutputStream out = new ObjectOutputStream(bytes);
-
 
             while (true) {
 
                 if(this.send_packet) {
+
+                    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+                    ObjectOutputStream out = new ObjectOutputStream(bytes);
+
+                    System.out.println("packet arrived");
                     InetAddress group = InetAddress.getByName(MULTICAST_ADDRESS);
                     out.writeObject(packet);
-
+                    System.out.println(packet.getTitle());
                     byte[] buffer = bytes.toByteArray();
 
                     DatagramPacket Dpacket = new DatagramPacket(buffer, buffer.length, group, PORT);
                     socket.send(Dpacket);
+
+                    this.send_packet = false;
+                    this.packet = null;
+
+                    bytes.close();
+                    out.close();
                 }
-                try { sleep((long) (Math.random() * SLEEP_TIME)); } catch (InterruptedException e) { }
+                //try { sleep((long) (Math.random() * SLEEP_TIME)); } catch (InterruptedException e) { }
             }
         } catch (IOException e) {
             e.printStackTrace();
