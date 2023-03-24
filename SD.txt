@@ -1,0 +1,9 @@
+-> Capturar sinais para guardar as cenas
+
+-> Downloader sem threads
+
+-> Multicast server com problemas de concorrencia ao abrir o canal
+
+-> Multicast avisa barrels que vai mandar pacote com x tamanho => envia => barrels avisam que receberam
+
+-> Downloaders vao ter de saber quantos barrels estao ativos atraves do SM (RMI???)
