@@ -39,13 +39,6 @@ public class Downloader extends Thread {
 
         MulticastSocket socket = null;
 
-        // Run Multicast Server
-        MulticastServerDownloader msd = new MulticastServerDownloader();
-        msd.start();
-
-        msd.packet = new URL("piroca", "teste", null, null);
-        msd.send_packet = true;
-
         // Open TCP Socket
         try (Socket s = new Socket("localhost", serversocket)) {
 
@@ -177,6 +170,7 @@ public class Downloader extends Thread {
     }
 }
 
+/*
 class MulticastServerDownloader extends Thread {
     private String MULTICAST_ADDRESS = "224.3.2.1";
     private int PORT = 4321;
@@ -225,6 +219,5 @@ class MulticastServerDownloader extends Thread {
             socket.close();
         }
     }
-
 }
-
+*/
