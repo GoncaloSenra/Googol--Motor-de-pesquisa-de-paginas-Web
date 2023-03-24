@@ -91,7 +91,7 @@ public class Downloader extends Thread {
 
                             System.out.println("packet arrived");
                             InetAddress group = InetAddress.getByName(MULTICAST_ADDRESS);
-                            outMulticast.writeObject(new URL(url, title, null, null));
+                            outMulticast.writeObject(new URL(url, title, links, words));
                             //System.out.println(packet.getTitle());
                             byte[] buffer = bytes.toByteArray();
 

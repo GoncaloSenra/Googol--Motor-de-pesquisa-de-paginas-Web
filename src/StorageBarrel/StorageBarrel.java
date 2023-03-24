@@ -21,7 +21,7 @@ import javax.print.attribute.HashPrintServiceAttributeSet;
 
 
 public class StorageBarrel extends UnicastRemoteObject implements SBInterface, Serializable {
-    public HashMap<String, HashSet<String>> index;
+    public HashMap<String, HashSet<IndexedURL>> index;
     private int Id;
 
     public StorageBarrel(int id) throws RemoteException {
@@ -29,8 +29,39 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
         this.index = new HashMap<>();
         this.Id = id;
     }
-    public HashSet<String> SearchWords(String[] words) {
+    public HashMap<String, String[]> SearchWords(String[] words) {
 
+        ArrayList<HashMap<String, String[]>> data = new ArrayList<>();
+
+        for (String word : words) {
+            for (Map.Entry<String, HashSet<IndexedURL>> map : this.index.entrySet()) {
+                if (map.getKey().equals(word)) {
+                    HashMap<String , String[]> auxmap = new HashMap<>();
+                    for (IndexedURL auxidx: map.getValue()){
+                        String[] auxinfo = new String[2];
+                        auxinfo[0] = auxidx.getTitle();
+                        auxinfo[1] = auxidx.getQuote();
+                        auxmap.put(auxidx.getUrl(), auxinfo);
+                    }
+                    data.add(auxmap);
+                    //set_links.add(map.getValue());
+                }
+            }
+        }
+
+        for (Map.Entry<String, String[]> map: data.get(0).entrySet()){
+            for (HashMap<String, String[]> auxmap: data) {
+                if(!auxmap.containsKey(map.getKey())){
+                    for (HashMap<String, String[]> rem: data) {
+                        rem.remove(map.getKey());
+                    }
+                }
+            }
+        }
+
+        return data.get(0);
+
+        /*
         ArrayList<HashSet<String>> set_links = new ArrayList<>();
 
         //System.out.println(this.index);
@@ -53,32 +84,27 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
         }
 
         return common;
-    }
-
-    @Override
-    public HashMap<String, HashSet<String>> getIndex() throws RemoteException {
-        return this.index;
+        */
     }
 
     public static void main(String[] args) {
 
         try {
 
-
             SMInterface sm = (SMInterface) LocateRegistry.getRegistry(7777).lookup("Barrel");
             StorageBarrel barrel = new StorageBarrel(Integer.parseInt(args[0]));
             sm.NewBarrel((SBInterface) barrel, Integer.toString(barrel.Id));
 
-            MulticastClientBarrel mcb = new MulticastClientBarrel(barrel.index);
+            MulticastClientBarrel mcb = new MulticastClientBarrel(barrel.index, barrel.Id);
             mcb.start();
 
-            HashSet<String> auxset = new HashSet<>();
-            auxset.add("https://pt.wikipedia.org/wiki/Eliseu_Pereira_dos_Santos");
-            auxset.add("https://inforestudante.uc.pt/nonio/security/login.do");
+            HashSet<IndexedURL> auxset = new HashSet<>();
+            auxset.add(new IndexedURL("https://pt.wikipedia.org/wiki/Eliseu_Pereira_dos_Santos", "GOD ELISEU", null));
+            auxset.add(new IndexedURL("https://inforestudante.uc.pt/nonio/security/login.do", "Inforestudante", null));
             barrel.index.put("Teste", auxset);
 
-            HashSet<String> auxset2 = new HashSet<>();
-            auxset2.add("https://pt.wikipedia.org/wiki/Eliseu_Pereira_dos_Santos");
+            HashSet<IndexedURL> auxset2 = new HashSet<>();
+            auxset2.add(new IndexedURL("https://pt.wikipedia.org/wiki/Eliseu_Pereira_dos_Santos", "GOD ELISEU", null));
             barrel.index.put("Eliseu", auxset2);
 
             //System.out.println(barrel.index);
@@ -110,9 +136,13 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
 class MulticastClientBarrel extends Thread {
     private String MULTICAST_ADDRESS = "224.3.2.1";
     private int PORT = 4321;
-    public HashMap<String, HashSet<String>> index;
-    public MulticastClientBarrel(HashMap<String, HashSet<String>> idx) {
+
+    private int barrelId;
+
+    public HashMap<String, HashSet<IndexedURL>> index;
+    public MulticastClientBarrel(HashMap<String, HashSet<IndexedURL>> idx, int id) {
         this.index = idx;
+        this.barrelId = id;
     }
     public void run() {
         MulticastSocket socket = null;
@@ -130,9 +160,11 @@ class MulticastClientBarrel extends Thread {
 
                 URL data = (URL) in.readObject();
 
-                System.out.println("Received packet from " + packet.getAddress().getHostAddress() + ":" + packet.getPort() + " with message:");
+                //System.out.println("Received packet from " + packet.getAddress().getHostAddress() + ":" + packet.getPort() + " with message:");
 
                 System.out.println("--------> " + data.getUrl() + " " + data.getTitle());
+
+
 
                 bytes.close();
                 in.close();
@@ -151,5 +183,4 @@ class MulticastClientBarrel extends Thread {
 
     }
 }
-
 

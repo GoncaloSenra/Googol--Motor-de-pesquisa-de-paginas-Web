@@ -12,9 +12,12 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 import StorageBarrel.SBInterface;
+import StorageBarrel.IndexedURL;
 
 
 public class SearchModule extends UnicastRemoteObject implements SMInterface {
@@ -40,13 +43,13 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
     public String SearchLinks(String[] words) throws RemoteException {
 
         String message = "";
-        HashSet<String> aux = barrels.get(0).SearchWords(words);
+        HashMap<String, String[]> aux = barrels.get(0).SearchWords(words);
 
         if (aux == null) {
             return "Links not found!\n";
         } else {
-            for (String link: aux) {
-                message += link + "\n";
+            for (Map.Entry<String, String[]> map: aux.entrySet()) {
+                message += map.getValue()[0] + " - " + map.getKey() + "\n\""+ map.getValue()[1] +"\"\n";
             }
         }
 
