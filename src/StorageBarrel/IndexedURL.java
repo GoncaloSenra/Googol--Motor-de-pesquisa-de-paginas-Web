@@ -9,10 +9,10 @@ public class IndexedURL implements Serializable {
     private String quote;
     private ArrayList<String> links;
 
-    public IndexedURL(String Url, String Title, ArrayList<String> Links) {
+    public IndexedURL(String Url, String Title, ArrayList<String> Links, String Quote) {
         this.url = Url;
         this.title = Title;
-        this.quote = "";
+        this.quote = Quote;
         this.links = Links;
     }
 

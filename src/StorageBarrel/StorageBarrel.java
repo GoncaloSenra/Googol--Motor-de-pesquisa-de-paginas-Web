@@ -17,7 +17,6 @@ import java.util.Map;
 import SearchModule.SMInterface;
 import SearchModule.URL;
 
-import javax.print.attribute.HashPrintServiceAttributeSet;
 
 
 public class StorageBarrel extends UnicastRemoteObject implements SBInterface, Serializable {
@@ -31,11 +30,16 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
     }
     public HashMap<String, String[]> SearchWords(String[] words) {
 
+        HashMap<String, HashSet<IndexedURL>> copy = new HashMap<>(this.index);
+
+        System.out.println("============\n" + copy.size());
+
         ArrayList<HashMap<String, String[]>> data = new ArrayList<>();
 
         for (String word : words) {
-            for (Map.Entry<String, HashSet<IndexedURL>> map : this.index.entrySet()) {
-                if (map.getKey().equals(word)) {
+            for (Map.Entry<String, HashSet<IndexedURL>> map : copy.entrySet()) {
+                if (map.getKey().equalsIgnoreCase(word)) {
+                    System.out.println("Existe");
                     HashMap<String , String[]> auxmap = new HashMap<>();
                     for (IndexedURL auxidx: map.getValue()){
                         String[] auxinfo = new String[2];
@@ -44,47 +48,36 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
                         auxmap.put(auxidx.getUrl(), auxinfo);
                     }
                     data.add(auxmap);
-                    //set_links.add(map.getValue());
                 }
             }
         }
 
-        for (Map.Entry<String, String[]> map: data.get(0).entrySet()){
-            for (HashMap<String, String[]> auxmap: data) {
-                if(!auxmap.containsKey(map.getKey())){
-                    for (HashMap<String, String[]> rem: data) {
-                        rem.remove(map.getKey());
-                    }
-                }
-            }
-        }
-
-        return data.get(0);
-
-        /*
-        ArrayList<HashSet<String>> set_links = new ArrayList<>();
-
-        //System.out.println(this.index);
-
-        for (String word : words) {
-            for (Map.Entry<String, HashSet<String>> map : this.index.entrySet()) {
-                if (map.getKey().equals(word)) {
-                    set_links.add(map.getValue());
-                }
-            }
-        }
-
-        if (set_links.isEmpty()) {
+        if (data.isEmpty()){
             return null;
         }
 
-        HashSet<String> common = new HashSet<>(set_links.get(0));
-        for (HashSet<String> links : set_links) {
-            common.retainAll(links);
+        HashMap<String, String[]> auxdata = new HashMap<>();
+
+        for (Map.Entry<String, String[]> entry : data.get(0).entrySet()) {
+            String key = entry.getKey();
+            boolean exists = true;
+
+            for (int i = 1; i < data.size(); i++) {
+                if (!data.get(i).containsKey(key)) {
+                    exists = false;
+                    break;
+                }
+            }
+
+            if (exists) {
+                auxdata.put(key, entry.getValue());
+            }
         }
 
-        return common;
-        */
+        data.clear();
+        data.add(auxdata);
+
+        return data.get(0);
     }
 
     public static void main(String[] args) {
@@ -98,19 +91,40 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
             MulticastClientBarrel mcb = new MulticastClientBarrel(barrel.index, barrel.Id);
             mcb.start();
 
+            try {
+                File file = new File("src/StorageBarrel/index" + barrel.Id + ".obj");
+                if (!file.exists()) {
+                    file.createNewFile();
+                } else {
+                    FileInputStream fileIn = new FileInputStream(file);
+                    ObjectInputStream in = new ObjectInputStream(fileIn);
+                    barrel.index = (HashMap<String, HashSet<IndexedURL>>) in.readObject();
+                    in.close();
+                    fileIn.close();
+                }
+
+            } catch (FileNotFoundException e) {
+                System.out.println("FOS: " + e);
+            } catch (IOException e) {
+                System.out.println("OOS: " + e);
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+
+            /*
             HashSet<IndexedURL> auxset = new HashSet<>();
-            auxset.add(new IndexedURL("https://pt.wikipedia.org/wiki/Eliseu_Pereira_dos_Santos", "GOD ELISEU", null));
-            auxset.add(new IndexedURL("https://inforestudante.uc.pt/nonio/security/login.do", "Inforestudante", null));
+            auxset.add(new IndexedURL("https://pt.wikipedia.org/wiki/Eliseu_Pereira_dos_Santos", "GOD ELISEU", null, "LENDA DAS LENDAS"));
+            auxset.add(new IndexedURL("https://inforestudante.uc.pt/nonio/security/login.do", "Inforestudante", null, "Site manhoso"));
             barrel.index.put("Teste", auxset);
 
             HashSet<IndexedURL> auxset2 = new HashSet<>();
-            auxset2.add(new IndexedURL("https://pt.wikipedia.org/wiki/Eliseu_Pereira_dos_Santos", "GOD ELISEU", null));
+            auxset2.add(new IndexedURL("https://pt.wikipedia.org/wiki/Eliseu_Pereira_dos_Santos", "GOD ELISEU", null, "LENDA DAS LENDAS"));
             barrel.index.put("Eliseu", auxset2);
 
             //System.out.println(barrel.index);
 
             try {
-                File file = new File("src/StorageBarrel/hashmap" + barrel.Id + ".obj");
+                File file = new File("src/StorageBarrel/index" + barrel.Id + ".obj");
                 if (!file.exists()) {
                     file.createNewFile();
                 }
@@ -125,6 +139,7 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
             } catch (IOException e) {
                 System.out.println("OOS: " + e);
             }
+            */
 
 
         } catch (RemoteException | NotBoundException e) {
@@ -136,10 +151,9 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
 class MulticastClientBarrel extends Thread {
     private String MULTICAST_ADDRESS = "224.3.2.1";
     private int PORT = 4321;
-
     private int barrelId;
-
     public HashMap<String, HashSet<IndexedURL>> index;
+
     public MulticastClientBarrel(HashMap<String, HashSet<IndexedURL>> idx, int id) {
         this.index = idx;
         this.barrelId = id;
@@ -152,7 +166,7 @@ class MulticastClientBarrel extends Thread {
             socket.joinGroup(group);
 
             while (true) {
-                byte[] buffer = new byte[50000];
+                byte[] buffer = new byte[100000];
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 socket.receive(packet);
                 ByteArrayInputStream bytes = new ByteArrayInputStream(buffer);
@@ -161,9 +175,34 @@ class MulticastClientBarrel extends Thread {
                 URL data = (URL) in.readObject();
 
                 //System.out.println("Received packet from " + packet.getAddress().getHostAddress() + ":" + packet.getPort() + " with message:");
+                System.out.println("> " + data.getUrl() + " " + data.getTitle());
 
-                System.out.println("--------> " + data.getUrl() + " " + data.getTitle());
+                for (String word : data.getWords()){
+                    HashSet<IndexedURL> aux = this.index.get(word);
+                    if (aux == null) {
+                        aux = new HashSet<IndexedURL>();
+                    }
+                    aux.add(new IndexedURL(data.getUrl(), data.getTitle(), null, ""));
+                    this.index.put(word, aux);
+                }
+                System.out.println("+++++++" + index.size());
 
+                try {
+                    File file = new File("src/StorageBarrel/index" + this.barrelId + ".obj");
+                    if (!file.exists()) {
+                        file.createNewFile();
+                    }
+                    FileOutputStream fileOut = new FileOutputStream(file, false);
+                    ObjectOutputStream out = new ObjectOutputStream(fileOut);
+                    out.writeObject(this.index);
+                    out.close();
+                    fileOut.close();
+
+                } catch (FileNotFoundException e) {
+                    System.out.println("FOS: " + e);
+                } catch (IOException e) {
+                    System.out.println("OOS: " + e);
+                }
 
 
                 bytes.close();
@@ -178,9 +217,5 @@ class MulticastClientBarrel extends Thread {
         }
     }
 
-    public void insertIndex() {
-
-
-    }
 }
 
