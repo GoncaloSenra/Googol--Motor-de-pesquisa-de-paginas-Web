@@ -21,6 +21,7 @@ import SearchModule.URL;
 
 public class StorageBarrel extends UnicastRemoteObject implements SBInterface, Serializable {
     public HashMap<String, HashSet<IndexedURL>> index;
+    public HashMap<String, HashSet<IndexedURL>> pages_list;
     private int Id;
 
     public StorageBarrel(int id) throws RemoteException {
@@ -28,7 +29,30 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
         this.index = new HashMap<>();
         this.Id = id;
     }
-    public HashMap<String, String[]> SearchWords(String[] words) {
+
+    public HashSet<String[]> SearchPointerLinks(String url) throws RemoteException{
+        HashSet<String[]> links = new HashSet<>();
+
+        System.out.println("---------- " + this.pages_list.size());
+        HashMap<String, HashSet<IndexedURL>> copy = new HashMap<>(this.pages_list);
+
+        for (Map.Entry<String, HashSet<IndexedURL>> map : copy.entrySet()) {
+            if (map.getKey().equalsIgnoreCase(url)) {
+                for (IndexedURL idx: map.getValue()) {
+                    String[] aux = new String[3];
+                    aux[0] = idx.getUrl();
+                    aux[1] = idx.getTitle();
+                    aux[2] = idx.getQuote();
+                    links.add(aux);
+                }
+                return links;
+            }
+        }
+
+        return null;
+    }
+
+    public HashMap<String, String[]> SearchWords(String[] words) throws RemoteException{
 
         HashMap<String, HashSet<IndexedURL>> copy = new HashMap<>(this.index);
 
@@ -39,7 +63,7 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
         for (String word : words) {
             for (Map.Entry<String, HashSet<IndexedURL>> map : copy.entrySet()) {
                 if (map.getKey().equalsIgnoreCase(word)) {
-                    System.out.println("Existe");
+                    //System.out.println("Existe");
                     HashMap<String , String[]> auxmap = new HashMap<>();
                     for (IndexedURL auxidx: map.getValue()){
                         String[] auxinfo = new String[2];
@@ -88,7 +112,7 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
             StorageBarrel barrel = new StorageBarrel(Integer.parseInt(args[0]));
             sm.NewBarrel((SBInterface) barrel, Integer.toString(barrel.Id));
 
-            MulticastClientBarrel mcb = new MulticastClientBarrel(barrel.index, barrel.Id);
+            MulticastClientBarrel mcb = new MulticastClientBarrel(barrel.index, barrel.pages_list,barrel.Id);
             mcb.start();
 
             try {
@@ -154,8 +178,11 @@ class MulticastClientBarrel extends Thread {
     private int barrelId;
     public HashMap<String, HashSet<IndexedURL>> index;
 
-    public MulticastClientBarrel(HashMap<String, HashSet<IndexedURL>> idx, int id) {
+    public HashMap<String, HashSet<IndexedURL>> pages_list;
+
+    public MulticastClientBarrel(HashMap<String, HashSet<IndexedURL>> idx, HashMap<String, HashSet<IndexedURL>> pl, int id) {
         this.index = idx;
+        this.pages_list = pl;
         this.barrelId = id;
     }
     public void run() {
@@ -182,10 +209,23 @@ class MulticastClientBarrel extends Thread {
                     if (aux == null) {
                         aux = new HashSet<IndexedURL>();
                     }
-                    aux.add(new IndexedURL(data.getUrl(), data.getTitle(), null, ""));
+                    aux.add(new IndexedURL(data.getUrl(), data.getTitle(), data.getUrls(), data.getQuote()));
                     this.index.put(word, aux);
                 }
-                System.out.println("+++++++" + index.size());
+
+                for (String link: data.getUrls()) {
+                    HashSet<IndexedURL> aux_pages;
+                    if (pages_list == null) {
+                        pages_list = new HashMap<String, HashSet<IndexedURL>>();
+                    }
+                    if ((aux_pages = pages_list.get(link)) == null){
+                        aux_pages = new HashSet<IndexedURL>();
+                    }
+                    aux_pages.add(new IndexedURL(data.getUrl(), data.getTitle(), data.getUrls(), data.getQuote()));
+                    pages_list.put(link, aux_pages);
+                }
+
+                //System.out.println("+++++++" + index.size());
 
                 try {
                     File file = new File("src/StorageBarrel/index" + this.barrelId + ".obj");
@@ -195,6 +235,7 @@ class MulticastClientBarrel extends Thread {
                     FileOutputStream fileOut = new FileOutputStream(file, false);
                     ObjectOutputStream out = new ObjectOutputStream(fileOut);
                     out.writeObject(this.index);
+                    out.writeObject(this.pages_list);
                     out.close();
                     fileOut.close();
 

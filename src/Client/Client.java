@@ -19,7 +19,8 @@ public class Client {
             String[] splited;
             while(true) {
                 System.out.println("1 - Index link (1 <url>)\n" +
-                        "2 - Search (2 <words>)"
+                        "2 - Search (2 <words>)\n" +
+                        "3 - Search pages (3 <url>)"
                 );
                 System.out.print("> ");
                 message = sc.nextLine();
@@ -32,6 +33,8 @@ public class Client {
                         aux[i-1] = splited[i];
                     }
                     response = h.SearchLinks(aux);
+                } else if (splited[0].equals("3")) {
+                    response = h.SearchPointers(splited[1]);
                 } else {
                     response = "Command not found";
                 }

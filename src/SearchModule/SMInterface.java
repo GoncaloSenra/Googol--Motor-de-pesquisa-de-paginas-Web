@@ -13,4 +13,6 @@ public interface SMInterface extends Remote{
 
     public String SearchLinks(String[] words) throws java.rmi.RemoteException;
 
+    public String SearchPointers(String link) throws java.rmi.RemoteException;
+
 }

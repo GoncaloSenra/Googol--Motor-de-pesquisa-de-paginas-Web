@@ -40,6 +40,22 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
         System.out.println("NEW BARREL -> " + name);
     }
 
+    public String SearchPointers(String link) throws RemoteException {
+
+        String message = "";
+        HashSet<String[]> aux = barrels.get(0).SearchPointerLinks(link);
+
+        if (aux == null) {
+            return "Links not found!\n";
+        } else {
+            for (String[] url: aux) {
+                message += url[0] + " - " + url[1] + "\n\""+ url[2] +"\"\n";
+            }
+        }
+
+        return message;
+    }
+
     public String SearchLinks(String[] words) throws RemoteException {
 
         String message = "";
