@@ -60,37 +60,82 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
 
         }
 
+        if (!downloaders.isEmpty()) {
+            int numBarrels = 0;
+            for (Integer i : activeBarrels){
+                if (i == 1) {
+                    numBarrels++;
+                }
+            }
+            for(int j = 0; j < activeDownloaders.size(); j++){
+                if (activeDownloaders.get(j) == 1){
+                    downloaders.get(j).UpdateNumBarrels(numBarrels);
+                }
+            }
+        }
+
         System.out.println("NEW BARREL -> " + id);
         return id;
     }
 
-    public void NewDownloader(DInterface Idownloader) throws  RemoteException{
-
+    public int NewDownloader(DInterface Idownloader) throws  RemoteException{
+        int id = 0;
         boolean all_active = true;
         if (activeDownloaders.isEmpty()){
             activeDownloaders.add(1);
             downloaders.add(Idownloader);
+            id = 0;
         } else {
             for (int i = 0; i < activeDownloaders.size(); i++){
                 if (activeDownloaders.get(i) == 0) {
                     activeDownloaders.set(i, 1);
                     downloaders.set(i, Idownloader);
                     all_active = false;
+                    id = i;
                     break;
                 }
             }
             if (all_active) {
                 activeDownloaders.add(1);
                 downloaders.add(Idownloader);
+                id = activeDownloaders.size() - 1;
             }
 
         }
 
+        int numBarrels = 0;
+        for (Integer i : activeBarrels){
+            if (i == 1) {
+                numBarrels++;
+            }
+        }
+        for(int j = 0; j < activeDownloaders.size(); j++){
+            if (activeDownloaders.get(j) == 1){
+                downloaders.get(j).UpdateNumBarrels(numBarrels);
+            }
+        }
+
         System.out.println("NEW DOWNLOADER");
+        return id;
     }
 
     public void TerminateBarrel(int id) throws RemoteException {
         activeBarrels.set(id, 0);
+        int numBarrels = 0;
+        for (Integer i : activeBarrels){
+            if (i == 1) {
+                numBarrels++;
+            }
+        }
+        for(int j = 0; j < activeDownloaders.size(); j++){
+            if (activeDownloaders.get(j) == 1){
+                downloaders.get(j).UpdateNumBarrels(numBarrels);
+            }
+        }
+    }
+
+    public void TerminateDownloader(int id) throws RemoteException {
+        activeDownloaders.set(id, 0);
     }
 
     public String SearchPointers(String link) throws RemoteException {

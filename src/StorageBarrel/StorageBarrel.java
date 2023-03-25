@@ -210,10 +210,36 @@ class MulticastClientBarrel extends Thread {
                 byte[] buffer = new byte[100000];
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 socket.receive(packet);
+
                 ByteArrayInputStream bytes = new ByteArrayInputStream(buffer);
                 ObjectInputStream in = new ObjectInputStream(bytes);
 
                 URL data = (URL) in.readObject();
+
+                //######################################################
+
+                /*
+
+                ByteArrayOutputStream bytes2 = new ByteArrayOutputStream();
+                ObjectOutputStream outMulticast = new ObjectOutputStream(bytes2);
+
+                System.out.println("packet arrived");
+                group = InetAddress.getByName(MULTICAST_ADDRESS);
+                outMulticast.writeObject("new URL(url, title, links, words)");
+                //System.out.println(packet.getTitle());
+                byte[] buf = bytes2.toByteArray();
+
+                DatagramPacket Dpacket = new DatagramPacket(buf, buf.length, group, PORT);
+                socket.send(Dpacket);
+
+                bytes2.close();
+                outMulticast.close();
+
+                */
+
+
+                //######################################################
+
 
                 //System.out.println("Received packet from " + packet.getAddress().getHostAddress() + ":" + packet.getPort() + " with message:");
                 System.out.println("> " + data.getUrl() + " " + data.getTitle());
