@@ -25,8 +25,7 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
     public static ArrayList<SBInterface> barrels = new ArrayList<>();
     public static ArrayList<String> names = new ArrayList<>();
     public static ArrayList<Integer> activeBarrels = new ArrayList<>();
-
-    public int chooseBarrel;
+    public static int chooseBarrel;
 
     public SearchModule() throws RemoteException {
         super();
@@ -71,11 +70,15 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
         String message = "";
         HashSet<String[]> aux;
 
+        if (!activeBarrels.contains(1)){
+            return "Currently there are no barrels available!";
+        }
+
         while(true) {
             if (activeBarrels.get(chooseBarrel) == 1){
                 aux = barrels.get(chooseBarrel).SearchPointerLinks(link);
                 chooseBarrel++;
-                if (chooseBarrel == activeBarrels.size()){
+                if (chooseBarrel == activeBarrels.toArray().length){
                     chooseBarrel = 0;
                 }
                 break;
@@ -102,13 +105,18 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
     public String SearchLinks(String[] words) throws RemoteException {
 
         String message = "";
-        HashMap<String, String[]> aux = barrels.get(chooseBarrel).SearchWords(words);
+        HashMap<String, String[]> aux;
+
+        if (!activeBarrels.contains(1)){
+            return "Currently there are no barrels available!";
+        }
 
         while(true) {
             if (activeBarrels.get(chooseBarrel) == 1){
                 aux = barrels.get(chooseBarrel).SearchWords(words);
                 chooseBarrel++;
-                if (chooseBarrel == activeBarrels.size()){
+                System.out.println(chooseBarrel);
+                if (chooseBarrel == activeBarrels.toArray().length){
                     chooseBarrel = 0;
                 }
                 break;
@@ -118,11 +126,6 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
                     chooseBarrel = 0;
                 }
             }
-        }
-
-        chooseBarrel++;
-        if (chooseBarrel == activeBarrels.size()){
-            chooseBarrel = 0;
         }
 
         if (aux == null) {
