@@ -16,16 +16,19 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import Downloader.DInterface;
 import StorageBarrel.SBInterface;
+import Downloader.DInterface;
 
 
 public class SearchModule extends UnicastRemoteObject implements SMInterface {
 
     private static int serversocket = 6000;
     public static ArrayList<SBInterface> barrels = new ArrayList<>();
-    public static ArrayList<String> names = new ArrayList<>();
     public static ArrayList<Integer> activeBarrels = new ArrayList<>();
-    public static int chooseBarrel;
+    public static ArrayList<DInterface> downloaders = new ArrayList<>();
+    public static ArrayList<Integer> activeDownloaders = new ArrayList<>();
+    public int chooseBarrel;
 
     public SearchModule() throws RemoteException {
         super();
@@ -59,6 +62,31 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
 
         System.out.println("NEW BARREL -> " + id);
         return id;
+    }
+
+    public void NewDownloader(DInterface Idownloader) throws  RemoteException{
+
+        boolean all_active = true;
+        if (activeDownloaders.isEmpty()){
+            activeDownloaders.add(1);
+            downloaders.add(Idownloader);
+        } else {
+            for (int i = 0; i < activeDownloaders.size(); i++){
+                if (activeDownloaders.get(i) == 0) {
+                    activeDownloaders.set(i, 1);
+                    downloaders.set(i, Idownloader);
+                    all_active = false;
+                    break;
+                }
+            }
+            if (all_active) {
+                activeDownloaders.add(1);
+                downloaders.add(Idownloader);
+            }
+
+        }
+
+        System.out.println("NEW DOWNLOADER");
     }
 
     public void TerminateBarrel(int id) throws RemoteException {
@@ -182,12 +210,13 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
             Registry b = LocateRegistry.createRegistry(7777);
             b.rebind("Barrel", h);
 
+            Registry d = LocateRegistry.createRegistry(8888);
+            d.rebind("Downloader", h);
+
             System.out.println("Search Module Server ready!");
         } catch (RemoteException re) {
             System.out.println("Exception in SM.main: " + re);
         }
     }
 
-        //ServerUrlList UrlList = new ServerUrlList();
-        //UrlList.start();
 }

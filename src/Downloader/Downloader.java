@@ -1,6 +1,7 @@
 
 package Downloader;
 
+import StorageBarrel.StorageBarrel;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -8,32 +9,44 @@ import org.jsoup.select.Elements;
 
 import java.net.*;
 import java.io.*;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.server.RMIClientSocketFactory;
+import java.rmi.server.RMIServerSocketFactory;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
 import SearchModule.URL;
+import SearchModule.SMInterface;
 
 
-public class Downloader extends Thread {
+public class Downloader extends UnicastRemoteObject implements DInterface, Serializable  {
 
     private static int serversocket = 6000;
     private String MULTICAST_ADDRESS = "224.3.2.1";
     private int PORT = 4321;
 
-
-    //private ArrayList<String> words;
-
-    /*public Downloader() {
-        this.words = new ArrayList<String>();
-    }*/
-    public static void main(String[] args) {
-        Downloader d = new Downloader();
-        d.start();
+    public Downloader() throws RemoteException {
+        super();
     }
 
-    public void run() {
+    public static void main(String[] args) {
+
+        Downloader d = null;
+        SMInterface sm = null;
+        try {
+            sm = (SMInterface) LocateRegistry.getRegistry(8888).lookup("Downloader");
+            d = new Downloader();
+
+            sm.NewDownloader((DInterface) d);
+
+        } catch (RemoteException | NotBoundException re) {
+            System.out.println("Exception in Downloader.main: " + re);
+        }
 
         String regex =  "(http|https|ftp)://[\\w_-]+(\\.[\\w_-]+)+([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?";
 
@@ -66,8 +79,8 @@ public class Downloader extends Thread {
                         try {
                             Document doc = Jsoup.connect(url).get();
 
-                            links = CrawlerUrls(url, doc);
-                            words = CrawlerWords(url, doc);
+                            links = d.CrawlerUrls(url, doc);
+                            words = d.CrawlerWords(url, doc);
                             title = doc.title();
                             //TODO: Falta citaçao
 
@@ -90,12 +103,12 @@ public class Downloader extends Thread {
                             ObjectOutputStream outMulticast = new ObjectOutputStream(bytes);
 
                             System.out.println("packet arrived");
-                            InetAddress group = InetAddress.getByName(MULTICAST_ADDRESS);
+                            InetAddress group = InetAddress.getByName(d.MULTICAST_ADDRESS);
                             outMulticast.writeObject(new URL(url, title, links, words));
                             //System.out.println(packet.getTitle());
                             byte[] buffer = bytes.toByteArray();
 
-                            DatagramPacket Dpacket = new DatagramPacket(buffer, buffer.length, group, PORT);
+                            DatagramPacket Dpacket = new DatagramPacket(buffer, buffer.length, group, d.PORT);
                             socket.send(Dpacket);
 
                             bytes.close();
@@ -169,55 +182,3 @@ public class Downloader extends Thread {
         return arraylinks;
     }
 }
-
-/*
-class MulticastServerDownloader extends Thread {
-    private String MULTICAST_ADDRESS = "224.3.2.1";
-    private int PORT = 4321;
-    private long SLEEP_TIME = 5000;
-    public boolean send_packet;
-    public URL packet;
-
-    public MulticastServerDownloader() {
-        super("Server " + (long) (Math.random() * 1000));
-        this.send_packet = false;
-    }
-
-    public void run() {
-        MulticastSocket socket = null;
-        System.out.println(this.getName() + " running...");
-        try {
-            socket = new MulticastSocket();  // create socket without binding it (only for sending)
-
-            while (true) {
-
-                if(this.send_packet) {
-
-                    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-                    ObjectOutputStream out = new ObjectOutputStream(bytes);
-
-                    System.out.println("packet arrived");
-                    InetAddress group = InetAddress.getByName(MULTICAST_ADDRESS);
-                    out.writeObject(packet);
-                    System.out.println(packet.getTitle());
-                    byte[] buffer = bytes.toByteArray();
-
-                    DatagramPacket Dpacket = new DatagramPacket(buffer, buffer.length, group, PORT);
-                    socket.send(Dpacket);
-
-                    this.send_packet = false;
-                    this.packet = null;
-
-                    bytes.close();
-                    out.close();
-                }
-                //try { sleep((long) (Math.random() * SLEEP_TIME)); } catch (InterruptedException e) { }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            socket.close();
-        }
-    }
-}
-*/
