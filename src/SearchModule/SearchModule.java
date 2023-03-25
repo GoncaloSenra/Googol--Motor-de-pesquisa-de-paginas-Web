@@ -17,39 +17,82 @@ import java.util.HashSet;
 import java.util.Map;
 
 import StorageBarrel.SBInterface;
-import StorageBarrel.IndexedURL;
 
 
 public class SearchModule extends UnicastRemoteObject implements SMInterface {
 
     private static int serversocket = 6000;
-
-    //private static int numBarrels = 2;
     public static ArrayList<SBInterface> barrels = new ArrayList<>();
-
     public static ArrayList<String> names = new ArrayList<>();
+    public static ArrayList<Integer> activeBarrels = new ArrayList<>();
+
+    public int chooseBarrel;
 
     public SearchModule() throws RemoteException {
         super();
+        this.chooseBarrel = 0;
     }
 
-    public void NewBarrel(SBInterface Ibarrel, String name) throws RemoteException {
-        names.add(name);
-        barrels.add(Ibarrel);
+    public int NewBarrel(SBInterface Ibarrel) throws RemoteException {
+        int id = 0;
+        boolean all_active = true;
+        if (activeBarrels.isEmpty()){
+            activeBarrels.add(1);
+            barrels.add(Ibarrel);
+            id = 0;
+        } else {
+            for (int i = 0; i < activeBarrels.size(); i++){
+                if (activeBarrels.get(i) == 0) {
+                    activeBarrels.set(i, 1);
+                    barrels.set(i, Ibarrel);
+                    all_active = false;
+                    id = i;
+                    break;
+                }
+            }
+            if (all_active) {
+                activeBarrels.add(1);
+                barrels.add(Ibarrel);
+                id = activeBarrels.size() - 1;
+            }
 
-        System.out.println("NEW BARREL -> " + name);
+        }
+
+        System.out.println("NEW BARREL -> " + id);
+        return id;
+    }
+
+    public void TerminateBarrel(int id) throws RemoteException {
+        activeBarrels.set(id, 0);
     }
 
     public String SearchPointers(String link) throws RemoteException {
 
         String message = "";
-        HashSet<String[]> aux = barrels.get(0).SearchPointerLinks(link);
+        HashSet<String[]> aux;
+
+        while(true) {
+            if (activeBarrels.get(chooseBarrel) == 1){
+                aux = barrels.get(chooseBarrel).SearchPointerLinks(link);
+                chooseBarrel++;
+                if (chooseBarrel == activeBarrels.size()){
+                    chooseBarrel = 0;
+                }
+                break;
+            } else {
+                chooseBarrel++;
+                if (chooseBarrel == activeBarrels.size()){
+                    chooseBarrel = 0;
+                }
+            }
+        }
+
 
         if (aux == null) {
             return "Links not found!\n";
         } else {
             for (String[] url: aux) {
-                message += url[0] + " - " + url[1] + "\n\""+ url[2] +"\"\n";
+                message += url[1] + " - " + url[0] + "\n\""+ url[2] +"\"\n";
             }
         }
 
@@ -59,7 +102,28 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
     public String SearchLinks(String[] words) throws RemoteException {
 
         String message = "";
-        HashMap<String, String[]> aux = barrels.get(0).SearchWords(words);
+        HashMap<String, String[]> aux = barrels.get(chooseBarrel).SearchWords(words);
+
+        while(true) {
+            if (activeBarrels.get(chooseBarrel) == 1){
+                aux = barrels.get(chooseBarrel).SearchWords(words);
+                chooseBarrel++;
+                if (chooseBarrel == activeBarrels.size()){
+                    chooseBarrel = 0;
+                }
+                break;
+            } else {
+                chooseBarrel++;
+                if (chooseBarrel == activeBarrels.size()){
+                    chooseBarrel = 0;
+                }
+            }
+        }
+
+        chooseBarrel++;
+        if (chooseBarrel == activeBarrels.size()){
+            chooseBarrel = 0;
+        }
 
         if (aux == null) {
             return "Links not found!\n";

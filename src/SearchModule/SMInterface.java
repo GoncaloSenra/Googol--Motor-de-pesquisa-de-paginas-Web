@@ -9,7 +9,9 @@ import StorageBarrel.SBInterface;
 public interface SMInterface extends Remote{
     public String IndexUrl(String url) throws java.rmi.RemoteException;
 
-    public void NewBarrel(SBInterface Ibarrel, String name) throws java.rmi.RemoteException;
+    public int NewBarrel(SBInterface Ibarrel) throws java.rmi.RemoteException;
+
+    public void TerminateBarrel(int id) throws java.rmi.RemoteException;
 
     public String SearchLinks(String[] words) throws java.rmi.RemoteException;
 

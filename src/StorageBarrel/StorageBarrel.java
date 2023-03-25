@@ -24,16 +24,16 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
     public HashMap<String, HashSet<IndexedURL>> pages_list;
     private int Id;
 
-    public StorageBarrel(int id) throws RemoteException {
+    public StorageBarrel() throws RemoteException {
         super();
         this.index = new HashMap<>();
-        this.Id = id;
+        this.pages_list = new HashMap<>();
     }
 
     public HashSet<String[]> SearchPointerLinks(String url) throws RemoteException{
         HashSet<String[]> links = new HashSet<>();
 
-        System.out.println("---------- " + this.pages_list.size());
+        //System.out.println("---------- " + this.pages_list.size());
         HashMap<String, HashSet<IndexedURL>> copy = new HashMap<>(this.pages_list);
 
         for (Map.Entry<String, HashSet<IndexedURL>> map : copy.entrySet()) {
@@ -56,7 +56,7 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
 
         HashMap<String, HashSet<IndexedURL>> copy = new HashMap<>(this.index);
 
-        System.out.println("============\n" + copy.size());
+        //System.out.println("============\n" + copy.size());
 
         ArrayList<HashMap<String, String[]>> data = new ArrayList<>();
 
@@ -109,22 +109,36 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
         try {
 
             SMInterface sm = (SMInterface) LocateRegistry.getRegistry(7777).lookup("Barrel");
-            StorageBarrel barrel = new StorageBarrel(Integer.parseInt(args[0]));
-            sm.NewBarrel((SBInterface) barrel, Integer.toString(barrel.Id));
+            StorageBarrel barrel = new StorageBarrel();
+            barrel.Id = sm.NewBarrel((SBInterface) barrel);
 
             MulticastClientBarrel mcb = new MulticastClientBarrel(barrel.index, barrel.pages_list,barrel.Id);
             mcb.start();
+
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                public void run() {
+                    try {
+                        sm.TerminateBarrel(barrel.Id);
+                    } catch (RemoteException e) {
+                        throw new RuntimeException(e);
+                    }
+                    System.out.println("Barrel is being terminated!");
+                }
+            });
 
             try {
                 File file = new File("src/StorageBarrel/index" + barrel.Id + ".obj");
                 if (!file.exists()) {
                     file.createNewFile();
                 } else {
-                    FileInputStream fileIn = new FileInputStream(file);
-                    ObjectInputStream in = new ObjectInputStream(fileIn);
-                    barrel.index = (HashMap<String, HashSet<IndexedURL>>) in.readObject();
-                    in.close();
-                    fileIn.close();
+                    if (file.length() != 0){
+                        FileInputStream fileIn = new FileInputStream(file);
+                        ObjectInputStream in = new ObjectInputStream(fileIn);
+                        barrel.index = (HashMap<String, HashSet<IndexedURL>>) in.readObject();
+                        barrel.pages_list = (HashMap<String, HashSet<IndexedURL>>) in.readObject();
+                        in.close();
+                        fileIn.close();
+                    }
                 }
 
             } catch (FileNotFoundException e) {
@@ -208,8 +222,23 @@ class MulticastClientBarrel extends Thread {
                     HashSet<IndexedURL> aux = this.index.get(word);
                     if (aux == null) {
                         aux = new HashSet<IndexedURL>();
+                        aux.add(new IndexedURL(data.getUrl(), data.getTitle(), data.getUrls(), data.getQuote()));
+                        //System.out.println("isNullllllllllllllllllll");
+                    } else{
+                        boolean contains = false;
+                        for (IndexedURL idx: aux){
+                            //System.out.println("-----> " + data.getUrl() + " | " + idx.getUrl());
+                            if (idx.getUrl().equals(data.getUrl())){
+                                //System.out.println("Entreiiiiiiiiiiiiiii");
+                                contains = true;
+                                break;
+                            }
+                        }
+                        if (!contains) {
+                            aux.add(new IndexedURL(data.getUrl(), data.getTitle(), data.getUrls(), data.getQuote()));
+                        }
                     }
-                    aux.add(new IndexedURL(data.getUrl(), data.getTitle(), data.getUrls(), data.getQuote()));
+
                     this.index.put(word, aux);
                 }
 
@@ -220,8 +249,21 @@ class MulticastClientBarrel extends Thread {
                     }
                     if ((aux_pages = pages_list.get(link)) == null){
                         aux_pages = new HashSet<IndexedURL>();
+                        aux_pages.add(new IndexedURL(data.getUrl(), data.getTitle(), data.getUrls(), data.getQuote()));
+                    } else {
+                        boolean contains = false;
+                        for (IndexedURL idx: aux_pages){
+                            //System.out.println("-----> " + data.getUrl() + " | " + idx.getUrl());
+                            if (idx.getUrl().equals(data.getUrl())){
+                                //System.out.println("Entreiiiiiiiiiiiiiii");
+                                contains = true;
+                                break;
+                            }
+                        }
+                        if (!contains) {
+                            aux_pages.add(new IndexedURL(data.getUrl(), data.getTitle(), data.getUrls(), data.getQuote()));
+                        }
                     }
-                    aux_pages.add(new IndexedURL(data.getUrl(), data.getTitle(), data.getUrls(), data.getQuote()));
                     pages_list.put(link, aux_pages);
                 }
 
