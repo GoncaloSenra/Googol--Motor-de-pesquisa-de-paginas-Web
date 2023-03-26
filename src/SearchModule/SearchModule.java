@@ -7,18 +7,22 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.RemoteServer;
+import java.rmi.server.ServerNotActiveException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import Client.Client;
 import Downloader.DInterface;
 import StorageBarrel.SBInterface;
-import Downloader.DInterface;
+import Client.CInterface;
 
 
 public class SearchModule extends UnicastRemoteObject implements SMInterface {
@@ -28,6 +32,9 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
     public static ArrayList<Integer> activeBarrels = new ArrayList<>();
     public static ArrayList<DInterface> downloaders = new ArrayList<>();
     public static ArrayList<Integer> activeDownloaders = new ArrayList<>();
+    public static ArrayList<CInterface> clients = new ArrayList<>();
+    public HashMap<Integer, String[]> infoDownloaders = new HashMap<>();
+    public HashMap<Integer, String[]> infoBarrels = new HashMap<>();
     public int chooseBarrel;
 
     public SearchModule() throws RemoteException {
@@ -74,6 +81,18 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
             }
         }
 
+        String[] info = new String[2];
+        try{
+            info[0] = RemoteServer.getClientHost();
+            info[1] = "";
+        } catch (ServerNotActiveException e) {
+            e.printStackTrace();
+        }
+        infoBarrels.put(id, info);
+        for (CInterface ci: clients){
+            ci.UpadateBarrels(infoBarrels);
+        }
+
         System.out.println("NEW BARREL -> " + id);
         return id;
     }
@@ -115,7 +134,36 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
             }
         }
 
-        System.out.println("NEW DOWNLOADER");
+        String[] info = new String[2];
+        try{
+            info[0] = RemoteServer.getClientHost();
+            info[1] = "";
+        } catch (ServerNotActiveException e) {
+            e.printStackTrace();
+        }
+        infoDownloaders.put(id, info);
+        for (CInterface ci: clients){
+            ci.UpadateDownloaders(infoDownloaders);
+        }
+
+        System.out.println("NEW DOWNLOADER -> " + id);
+        return id;
+    }
+
+    public int NewClient(CInterface Iclient) throws RemoteException {
+        int id;
+        clients.add(Iclient);
+        id = clients.size() - 1;
+
+        System.out.println("NEW CLIENT -> " + id);
+
+        for (CInterface ci: clients){
+            ci.UpadateDownloaders(infoDownloaders);
+        }
+        for (CInterface ci: clients){
+            ci.UpadateBarrels(infoBarrels);
+        }
+
         return id;
     }
 
@@ -132,10 +180,23 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
                 downloaders.get(j).UpdateNumBarrels(numBarrels);
             }
         }
+
+        infoBarrels.remove(id);
+        for (CInterface ci: clients){
+            ci.UpadateBarrels(infoBarrels);
+        }
     }
 
     public void TerminateDownloader(int id) throws RemoteException {
         activeDownloaders.set(id, 0);
+        infoDownloaders.remove(id);
+        for (CInterface ci: clients){
+            ci.UpadateDownloaders(infoDownloaders);
+        }
+    }
+
+    public void TerminateClient(int id) throws RemoteException {
+        clients.remove(id);
     }
 
     public String SearchPointers(String link) throws RemoteException {

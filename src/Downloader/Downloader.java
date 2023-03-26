@@ -13,6 +13,8 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 
+import java.rmi.server.RemoteServer;
+import java.rmi.server.ServerNotActiveException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,6 +31,7 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
     private String MULTICAST_ADDRESS = "224.3.2.1";
     private int PORT = 4321;
     private int Id;
+    private String IP = "localhost";
     private int numBarrels;
 
     public Downloader() throws RemoteException {
@@ -40,12 +43,13 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
         System.out.println("num: " + num);
     }
 
+    //TODO: meter port no info
+    //TODO: reliable multicast
     public static void main(String[] args) {
 
         try {
             SMInterface sm = (SMInterface) LocateRegistry.getRegistry(8888).lookup("Downloader");
             Downloader d = new Downloader();
-
             d.Id = sm.NewDownloader((DInterface) d);
 
             Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -64,7 +68,7 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
             MulticastSocket socket = null;
 
             // Open TCP Socket
-            try (Socket s = new Socket("localhost", serversocket)) {
+            try (Socket s = new Socket(d.IP, serversocket)) {
 
                 System.out.println("SOCKET=" + s);
 
