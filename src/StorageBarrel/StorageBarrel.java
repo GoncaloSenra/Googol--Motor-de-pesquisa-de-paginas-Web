@@ -5,6 +5,8 @@ import java.io.*;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -191,7 +193,6 @@ class MulticastClientBarrel extends Thread {
     private int PORT = 4321;
     private int barrelId;
     public HashMap<String, HashSet<IndexedURL>> index;
-
     public HashMap<String, HashSet<IndexedURL>> pages_list;
 
     public MulticastClientBarrel(HashMap<String, HashSet<IndexedURL>> idx, HashMap<String, HashSet<IndexedURL>> pl, int id) {
@@ -218,25 +219,46 @@ class MulticastClientBarrel extends Thread {
 
                 //######################################################
 
+
+                DatagramPacket ackPacket = new DatagramPacket(new byte[4], 4);
+
+                ByteBuffer buffer2 = ByteBuffer.allocate(128);
+                buffer2.putInt(1);
+
+                ackPacket.setData(buffer2.array());
+
+                ackPacket.setSocketAddress(packet.getSocketAddress());
+
+                socket.send(ackPacket);
+
+
                 /*
+                byte[] ack = new byte[128];
+
+
+                String ackb = "ACKKKKKKKKKKKKKKKKKK";
+
+                ack = ackb.getBytes(StandardCharsets.UTF_8);
+
+                DatagramPacket ackPacket = new DatagramPacket(ack, ack.length, group, PORT);
+                socket.send(ackPacket);
+                */
+
+                /*
+                byte[] ackb = new byte[1000];
 
                 ByteArrayOutputStream bytes2 = new ByteArrayOutputStream();
                 ObjectOutputStream outMulticast = new ObjectOutputStream(bytes2);
 
-                System.out.println("packet arrived");
-                group = InetAddress.getByName(MULTICAST_ADDRESS);
-                outMulticast.writeObject("new URL(url, title, links, words)");
-                //System.out.println(packet.getTitle());
-                byte[] buf = bytes2.toByteArray();
 
-                DatagramPacket Dpacket = new DatagramPacket(buf, buf.length, group, PORT);
-                socket.send(Dpacket);
+                String ack = "ACKKKKKKKKKKKKKKKKKK";
 
-                bytes2.close();
-                outMulticast.close();
+                ackb = bytes2.toByteArray();
+                outMulticast.writeObject(ack);
 
+                DatagramPacket ackPacket = new DatagramPacket(ackb, 1, group, PORT);
+                socket.send(ackPacket);
                 */
-
 
                 //######################################################
 

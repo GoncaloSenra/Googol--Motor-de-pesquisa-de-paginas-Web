@@ -8,12 +8,14 @@ import org.jsoup.select.Elements;
 
 import java.net.*;
 import java.io.*;
+import java.nio.ByteBuffer;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
@@ -119,6 +121,34 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
 
                                 DatagramPacket Dpacket = new DatagramPacket(buffer, buffer.length, group, d.PORT);
                                 socket.send(Dpacket);
+
+                                //#######################################
+                                /*
+                                byte[] ackData = new byte[1024];
+                                DatagramPacket ackPacket = new DatagramPacket(ackData, ackData.length);
+
+                                socket.receive(ackPacket);
+
+                                String ack = new String(ackPacket.getData(), 0, ackPacket.getLength());
+                                System.out.println(ack);
+                                */
+
+                                byte[] ackData = new byte[1024];
+                                DatagramPacket ackPacket = new DatagramPacket(ackData, ackData.length);
+                                socket.receive(ackPacket);
+
+                                byte[] data = new byte[ackPacket.getLength()];
+
+                                System.arraycopy(ackPacket.getData(), ackPacket.getOffset(), data, 0, ackPacket.getLength());
+
+                                ByteBuffer buffer3 = ByteBuffer.wrap(data);
+
+                                int sequenceNumber = buffer3.getInt();
+
+                                System.out.println(sequenceNumber);
+
+
+                                //#######################################
 
                                 bytes.close();
                                 outMulticast.close();
