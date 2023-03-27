@@ -81,9 +81,10 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
         ArrayList<HashMap<String, String[]>> data = new ArrayList<>();
 
         for (String word : words) {
+            boolean empty = true;
             for (Map.Entry<String, HashSet<IndexedURL>> map : copy.entrySet()) {
                 if (map.getKey().equalsIgnoreCase(word)) {
-                    //System.out.println("Existe");
+                    empty = false;
                     HashMap<String , String[]> auxmap = new HashMap<>();
                     for (IndexedURL auxidx: map.getValue()){
                         String[] auxinfo = new String[2];
@@ -94,11 +95,15 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
                     data.add(auxmap);
                 }
             }
+            if (empty) {
+                return null;
+            }
         }
 
         if (data.isEmpty()){
             return null;
         }
+
 
         HashMap<String, String[]> auxdata = new HashMap<>();
 
@@ -167,8 +172,6 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
             StorageBarrel barrel = new StorageBarrel();
             barrel.Id = sm.NewBarrel((SBInterface) barrel);
 
-            MulticastClientBarrel mcb = new MulticastClientBarrel(barrel.index, barrel.pages_list,barrel.Id);
-            mcb.start();
 
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 public void run() {
@@ -182,7 +185,7 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
             });
 
             try {
-                File file = new File("src/StorageBarrel/index" + barrel.Id + ".obj");
+                File file = new File("index" + barrel.Id + ".obj");
                 if (!file.exists()) {
                     file.createNewFile();
                 } else {
@@ -191,8 +194,6 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
                         ObjectInputStream in = new ObjectInputStream(fileIn);
                         barrel.index = (HashMap<String, HashSet<IndexedURL>>) in.readObject();
                         barrel.pages_list = (HashMap<String, HashSet<IndexedURL>>) in.readObject();
-                        barrel.word_counter = (HashMap<String, Integer>) in.readObject();
-                        barrel.users = (HashMap<String, String>) in.readObject();
                         in.close();
                         fileIn.close();
                     }
@@ -201,10 +202,14 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
             } catch (FileNotFoundException e) {
                 System.out.println("FOS: " + e);
             } catch (IOException e) {
+                e.printStackTrace();
                 System.out.println("OOS: " + e);
             } catch (ClassNotFoundException e) {
                 throw new RuntimeException(e);
             }
+
+            MulticastClientBarrel mcb = new MulticastClientBarrel(barrel.index, barrel.pages_list,barrel.Id);
+            mcb.start();
 
             /*
             HashSet<IndexedURL> auxset = new HashSet<>();
@@ -373,7 +378,7 @@ class MulticastClientBarrel extends Thread {
                 //System.out.println("+++++++" + index.size());
 
                 try {
-                    File file = new File("src/StorageBarrel/index" + this.barrelId + ".obj");
+                    File file = new File("index" + this.barrelId + ".obj");
                     if (!file.exists()) {
                         file.createNewFile();
                     }

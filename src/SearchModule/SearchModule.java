@@ -164,6 +164,8 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
             ci.UpadateBarrels(infoBarrels);
         }
 
+        UpdateTopWords();
+
         return id;
     }
 
@@ -315,7 +317,10 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
                     best[1] = Integer.toString(entry.getValue());
                 }
             }
-            final_counter.add(best);
+            result.remove(best[0]);
+            final_counter.add(best.clone());
+            best[0] = "";
+            best[1] = "0";
         }
 
         for (CInterface c: clients) {
