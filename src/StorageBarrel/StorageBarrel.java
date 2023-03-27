@@ -54,7 +54,7 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
         return null;
     }
 
-    public HashMap<String, String[]> SearchWords(String[] words) throws RemoteException{
+    public ArrayList<String[]> SearchWords(String[] words) throws RemoteException{
 
         HashMap<String, HashSet<IndexedURL>> copy = new HashMap<>(this.index);
 
@@ -100,10 +100,45 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
             }
         }
 
+        ArrayList<String[]> sorted_urls = new ArrayList<>();
+        for (Map.Entry<String, String[]> entry : auxdata.entrySet()) {
+            String[] aux = new String[3];
+            aux[0] = entry.getKey();
+            aux[1] = entry.getValue()[0];
+            aux[2] = entry.getValue()[1];
+            if (sorted_urls.isEmpty()){
+                sorted_urls.add(aux);
+            } else {
+                boolean inserted = false;
+                for (int i = 0; i < sorted_urls.size(); i++) {
+                    int num_insertion;
+                    if (pages_list.get(aux[0]) == null){
+                        num_insertion = 0;
+                    } else {
+                        num_insertion = pages_list.get(aux[0]).size();
+                    }
+                    int num_list;
+                    if (pages_list.get(sorted_urls.get(i)[0]) == null) {
+                        num_list = 0;
+                    } else {
+                        num_list = pages_list.get(sorted_urls.get(i)[0]).size();
+                    }
+                    if (num_insertion > num_list) {
+                        sorted_urls.add(i, aux);
+                        inserted = true;
+                        break;
+                    }
+                }
+                if (!inserted) {
+                    sorted_urls.add(aux);
+                }
+            }
+        }
+
         data.clear();
         data.add(auxdata);
 
-        return data.get(0);
+        return sorted_urls;
     }
 
     public static void main(String[] args) {

@@ -239,7 +239,7 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
     public String SearchLinks(String[] words) throws RemoteException {
 
         String message = "";
-        HashMap<String, String[]> aux;
+        ArrayList<String[]> aux;
 
         if (!activeBarrels.contains(1)){
             return "Currently there are no barrels available!";
@@ -265,8 +265,8 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
         if (aux == null) {
             return "Links not found!\n";
         } else {
-            for (Map.Entry<String, String[]> map: aux.entrySet()) {
-                message += map.getValue()[0] + " - " + map.getKey() + "\n\""+ map.getValue()[1] +"\"\n";
+            for (String[] arr: aux) {
+                message += arr[1] + " - " + arr[0] + "\n\""+ arr[2] +"\"\n";
             }
         }
 
