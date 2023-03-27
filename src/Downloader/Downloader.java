@@ -73,7 +73,7 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
                 System.out.println("SOCKET=" + s);
 
                 try {
-                    socket = new MulticastSocket();  // create socket without binding it (only for sending)
+                    socket = new MulticastSocket();
 
                     DataInputStream in = new DataInputStream(s.getInputStream());
                     DataOutputStream out = new DataOutputStream(s.getOutputStream());

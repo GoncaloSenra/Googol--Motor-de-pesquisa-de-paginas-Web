@@ -24,12 +24,20 @@ import SearchModule.URL;
 public class StorageBarrel extends UnicastRemoteObject implements SBInterface, Serializable {
     public HashMap<String, HashSet<IndexedURL>> index;
     public HashMap<String, HashSet<IndexedURL>> pages_list;
+    public HashMap<String, Integer> word_counter;
+    public HashMap<String, String> users;
     private int Id;
 
     public StorageBarrel() throws RemoteException {
         super();
         this.index = new HashMap<>();
         this.pages_list = new HashMap<>();
+        this.word_counter = new HashMap<>();
+        this.users = new HashMap<>();
+    }
+
+    public HashMap<String, Integer> getWord_counter() throws RemoteException{
+        return word_counter;
     }
 
     public HashSet<String[]> SearchPointerLinks(String url) throws RemoteException{
@@ -56,9 +64,19 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
 
     public ArrayList<String[]> SearchWords(String[] words) throws RemoteException{
 
-        HashMap<String, HashSet<IndexedURL>> copy = new HashMap<>(this.index);
+        //Upadte Word Counter
+        for (String word : words) {
+            if (word_counter.get(word) == null) {
+                word_counter.put(word, 1);
+            } else {
+                int count = word_counter.get(word);
+                count ++;
+                word_counter.put(word, count);
+            }
+        }
 
-        //System.out.println("============\n" + copy.size());
+
+        HashMap<String, HashSet<IndexedURL>> copy = new HashMap<>(this.index);
 
         ArrayList<HashMap<String, String[]>> data = new ArrayList<>();
 
@@ -173,6 +191,8 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
                         ObjectInputStream in = new ObjectInputStream(fileIn);
                         barrel.index = (HashMap<String, HashSet<IndexedURL>>) in.readObject();
                         barrel.pages_list = (HashMap<String, HashSet<IndexedURL>>) in.readObject();
+                        barrel.word_counter = (HashMap<String, Integer>) in.readObject();
+                        barrel.users = (HashMap<String, String>) in.readObject();
                         in.close();
                         fileIn.close();
                     }

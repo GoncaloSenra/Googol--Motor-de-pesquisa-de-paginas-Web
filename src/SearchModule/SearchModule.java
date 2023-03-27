@@ -270,7 +270,61 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
             }
         }
 
+        UpdateTopWords();
+
         return message;
+    }
+
+    public void UpdateTopWords(){
+
+        ArrayList<HashMap<String, Integer>> all_words_counters = new ArrayList<>();
+        HashMap<String, Integer> result = new HashMap<>();
+
+        for (int i = 0; i < activeBarrels.size(); i++) {
+            if (activeBarrels.get(i) == 1) {
+                try {
+                    all_words_counters.add(barrels.get(i).getWord_counter());
+                } catch (RemoteException e) {
+                    System.out.println("Remote ex in SM.UpdateTopSearches " + e.getMessage());
+                }
+            }
+        }
+
+        for (Map<String, Integer> map : all_words_counters) {
+            map.forEach((key, value) ->
+                    result.merge(key, value, Integer::sum)
+            );
+        }
+
+        ArrayList<String[]> final_counter = new ArrayList<>();
+        String[] best = new String[2];
+        best[0] = "";
+        best[1] = "0";
+
+        int num = 0;
+        if (result.size() < 10){
+            num = result.size();
+        } else {
+            num = 10;
+        }
+
+        for (int i = 0; i < num; i++) {
+            for (Map.Entry<String, Integer> entry : result.entrySet()) {
+                if (entry.getValue() > Integer.parseInt(best[1])) {
+                    best[0] = entry.getKey();
+                    best[1] = Integer.toString(entry.getValue());
+                }
+            }
+            final_counter.add(best);
+        }
+
+        for (CInterface c: clients) {
+            try {
+                c.UpadateTopSearches(final_counter);
+            } catch (RemoteException e) {
+                System.out.println("Remote ex in SM.UpdateTopSearches " + e.getMessage());
+            }
+        }
     }
 
     public String IndexUrl(String url) throws RemoteException {

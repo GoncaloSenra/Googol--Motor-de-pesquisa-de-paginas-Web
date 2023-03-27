@@ -1,9 +1,11 @@
 
 package Client;
 
+import java.nio.file.StandardOpenOption;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
@@ -16,7 +18,7 @@ public class Client extends UnicastRemoteObject implements CInterface {
     private int Id;
     private HashMap<Integer, String[]> infoDownloaders;
     private HashMap<Integer, String[]> infoBarrels;
-    private HashMap<String, Integer> topSearches;
+    private ArrayList<String[]> topSearches;
 
     public void UpadateDownloaders(HashMap<Integer, String[]> info) throws RemoteException{
         this.infoDownloaders = info;
@@ -24,15 +26,15 @@ public class Client extends UnicastRemoteObject implements CInterface {
     public void UpadateBarrels(HashMap<Integer, String[]> info) throws RemoteException{
         this.infoBarrels = info;
     }
-    public void UpadateTopSearches(HashMap<Integer, String[]> info) throws RemoteException{
-
+    public void UpadateTopSearches(ArrayList<String[]> info) throws RemoteException{
+        this.topSearches = info;
     }
 
     public Client() throws RemoteException {
         super();
         this.infoDownloaders = new HashMap<>();
         this.infoBarrels = new HashMap<>();
-        this.topSearches = new HashMap<>();
+        this.topSearches = new ArrayList<>();
     }
 
     public static void main(String args[]) {
@@ -76,6 +78,8 @@ public class Client extends UnicastRemoteObject implements CInterface {
                 } else if (splited[0].equals("3")) {
                     response = h.SearchPointers(splited[1]);
                 } else if (splited[0].equals("4")) {
+
+                    // DOWNLOADERS
                     response = "Active Downloaders: \n";
                     if (c.infoDownloaders.size() == 0){
                         response += "There are no active Downloaders\n\n";
@@ -86,13 +90,24 @@ public class Client extends UnicastRemoteObject implements CInterface {
                         response += "\n";
                     }
 
-
+                    // BARRELS
                     response += "Active Barrels: \n";
                     if (c.infoBarrels.size() == 0){
                         response += "There are no active Barrels\n\n";
                     } else {
                         for (Map.Entry<Integer, String[]> entry : c.infoBarrels.entrySet()) {
                             response += "ID: " + entry.getKey() + " IP ADDRESS: " + entry.getValue()[0] + "\n";
+                        }
+                        response += "\n";
+                    }
+
+                    // TOP SEARCHES
+                    response += "Top 10 Searches: \n";
+                    if (c.topSearches.size() == 0){
+                        response += "No searches, no party!!!\n\n";
+                    } else {
+                        for (int i = 0; i < c.topSearches.size(); i++) {
+                            response += (i + 1) + " - " + c.topSearches.get(i)[0] + " (" + c.topSearches.get(i)[1] + " search(es))\n";
                         }
                         response += "\n";
                     }
