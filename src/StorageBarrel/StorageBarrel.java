@@ -6,7 +6,6 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -185,7 +184,7 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
             });
 
             try {
-                File file = new File("index" + barrel.Id + ".obj");
+                File file = new File("src/StorageBarrel/index" + barrel.Id + ".obj");
                 if (!file.exists()) {
                     file.createNewFile();
                 } else {
@@ -378,7 +377,7 @@ class MulticastClientBarrel extends Thread {
                 //System.out.println("+++++++" + index.size());
 
                 try {
-                    File file = new File("index" + this.barrelId + ".obj");
+                    File file = new File("src/StorageBarrel/index" + this.barrelId + ".obj");
                     if (!file.exists()) {
                         file.createNewFile();
                     }
