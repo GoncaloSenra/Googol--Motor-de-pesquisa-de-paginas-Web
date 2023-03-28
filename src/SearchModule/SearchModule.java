@@ -91,6 +91,8 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
             ci.UpadateBarrels(infoBarrels);
         }
 
+        UpdateTopWords();
+
         System.out.println("NEW BARREL -> " + id);
         return id;
     }
@@ -243,7 +245,7 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
         HashMap <Integer, String> map = new HashMap<>();
 
         if (!activeBarrels.contains(1)){
-            map.put(0, "Currently there are no barrels available!");
+            map.put(0, "Currently there are no barrels available!\n");
             return map;
         }
 
@@ -484,22 +486,27 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
                     }
                     UrlList.interrupt();
 
-                    /*
+
                     try {
-                        System.out.println("dvfvfdvdfvdfvfd");
                         UrlList.interrupt();
                         ArrayList<DInterface> aux = new ArrayList<>(downloaders);
                         for (DInterface dow : aux) {
                             dow.ExitDownloaders();
+                            //aux.remove(dow);
+                            try {
+                                Thread.sleep(1000);
+                            } catch (java.lang.InterruptedException e) {
+                                System.out.println(e.getMessage());
+                            }
                         }
                         for (SBInterface s : barrels) {
                             s.ExitBarrels();
                         }
 
                     } catch (RemoteException e) {
-                        throw new RuntimeException(e);
+                        System.out.println("Exception terminating SM: " + e.getMessage());;
                     }
-                    */
+
 
                     System.out.println("Search Module is being terminated!");
                 }

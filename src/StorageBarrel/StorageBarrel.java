@@ -248,8 +248,6 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
 
             SMInterface sm = (SMInterface) LocateRegistry.getRegistry(7777).lookup("Barrel");
             StorageBarrel barrel = new StorageBarrel();
-            barrel.Id = sm.NewBarrel((SBInterface) barrel);
-
 
             try {
                 File file = new File("src/StorageBarrel/index" + barrel.Id + ".obj");
@@ -300,14 +298,19 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
                 throw new RuntimeException(e);
             }
 
+            barrel.Id = sm.NewBarrel((SBInterface) barrel);
+
             MulticastClientBarrel mcb = new MulticastClientBarrel(barrel.index, barrel.pages_list,barrel.Id);
             mcb.start();
 
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 public void run() {
                     try {
+                        mcb.terminate = 1;
+                        Thread.sleep(3000);
+                        mcb.interrupt();
                         sm.TerminateBarrel(barrel.Id);
-                    } catch (RemoteException e) {
+                    } catch (RemoteException | InterruptedException e) {
                         throw new RuntimeException(e);
                     }
                     System.out.println("Barrel is being terminated!");
@@ -345,7 +348,7 @@ class MulticastClientBarrel extends Thread {
             while (true) {
 
                 if (terminate == 1) {
-                    this.interrupt();
+                    break;
                 }
 
                 byte[] buffer = new byte[100000];
@@ -359,7 +362,7 @@ class MulticastClientBarrel extends Thread {
 
                 //######################################################
 
-
+                /*ACK
                 DatagramPacket ackPacket = new DatagramPacket(new byte[4], 4);
 
                 ByteBuffer buffer2 = ByteBuffer.allocate(128);
@@ -370,7 +373,7 @@ class MulticastClientBarrel extends Thread {
                 ackPacket.setSocketAddress(packet.getSocketAddress());
 
                 socket.send(ackPacket);
-
+                */
 
                 /*
                 byte[] ack = new byte[128];

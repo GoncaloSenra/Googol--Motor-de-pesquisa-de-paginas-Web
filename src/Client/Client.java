@@ -1,7 +1,6 @@
 
 package Client;
 
-import java.nio.file.StandardOpenOption;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
@@ -10,9 +9,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 import SearchModule.SMInterface;
-
-//O SM tambem vai ter de ter um interfce do cliente para poder mandar as infos de administracao
-//quando existem alteraçoes o SM chama uma funçao do cliente (RMI callback)
 
 public class Client extends UnicastRemoteObject implements CInterface {
     private int Id;

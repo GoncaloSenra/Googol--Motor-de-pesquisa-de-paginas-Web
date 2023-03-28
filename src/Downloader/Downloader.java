@@ -75,6 +75,7 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
 
                 try {
                     socket = new MulticastSocket();
+                    InetAddress group = InetAddress.getByName(d.MULTICAST_ADDRESS);
 
                     DataInputStream in = new DataInputStream(s.getInputStream());
                     DataOutputStream out = new DataOutputStream(s.getOutputStream());
@@ -84,6 +85,17 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
 
                         out.writeUTF("Type | new_url");
                         String url = in.readUTF();
+
+                        System.out.println("0");
+                        while (d.numBarrels == 0) {
+                            try {
+                                Thread.sleep(1000);
+                            } catch (java.lang.InterruptedException e) {
+                                System.out.println(e.getMessage());
+                            }
+                            //System.out.println(d.numBarrels);
+                        }
+                        System.out.println("1");
 
                         System.out.println("Url: " + url);
 
@@ -124,8 +136,6 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
                                 ByteArrayOutputStream bytes = new ByteArrayOutputStream();
                                 ObjectOutputStream outMulticast = new ObjectOutputStream(bytes);
 
-                                System.out.println("packet arrived");
-                                InetAddress group = InetAddress.getByName(d.MULTICAST_ADDRESS);
                                 outMulticast.writeObject(new URL(url, title, links, words, quote));
                                 //System.out.println(packet.getTitle());
                                 byte[] buffer = bytes.toByteArray();
@@ -134,16 +144,17 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
                                 socket.send(Dpacket);
 
                                 //#######################################
-                            /*
-                            byte[] ackData = new byte[1024];
-                            DatagramPacket ackPacket = new DatagramPacket(ackData, ackData.length);
+                                                            /*
+                                                            byte[] ackData = new byte[1024];
+                                                            DatagramPacket ackPacket = new DatagramPacket(ackData, ackData.length);
 
-                            socket.receive(ackPacket);
+                                                            socket.receive(ackPacket);
 
-                            String ack = new String(ackPacket.getData(), 0, ackPacket.getLength());
-                            System.out.println(ack);
-                            */
+                                                            String ack = new String(ackPacket.getData(), 0, ackPacket.getLength());
+                                                            System.out.println(ack);
+                                                            */
 
+                                /*
                                 byte[] ackData = new byte[1024];
                                 DatagramPacket ackPacket = new DatagramPacket(ackData, ackData.length);
                                 socket.receive(ackPacket);
@@ -157,21 +168,21 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
                                 int sequenceNumber = buffer3.getInt();
 
                                 System.out.println(sequenceNumber);
-
+                                */
 
                                 //#######################################
 
                                 bytes.close();
                                 outMulticast.close();
 
-                                //##########################
-                            /*
-                            byte[] buffer2 = new byte[100000];
-                            DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-                            socket.receive(packet);
+                                                                                //##########################
+                                                                            /*
+                                                                            byte[] buffer2 = new byte[100000];
+                                                                            DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+                                                                            socket.receive(packet);
 
-                            System.out.println(packet);
-                            */
+                                                                            System.out.println(packet);
+                                                                            */
 
 
                             } else {
