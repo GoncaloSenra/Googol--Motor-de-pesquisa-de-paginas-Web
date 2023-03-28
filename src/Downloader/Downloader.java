@@ -43,14 +43,12 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
         System.out.println("num: " + num);
     }
 
-    //TODO: meter port no info
     //TODO: reliable multicast
     public static void main(String[] args) {
 
         try {
             SMInterface sm = (SMInterface) LocateRegistry.getRegistry(8888).lookup("Downloader");
-            Downloader d = new Downloader();
-            d.Id = sm.NewDownloader((DInterface) d);
+            Downloader d = new Downloader();            d.Id = sm.NewDownloader((DInterface) d);
 
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 public void run() {

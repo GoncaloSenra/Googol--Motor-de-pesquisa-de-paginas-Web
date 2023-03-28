@@ -249,8 +249,10 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
             return map;
         }
 
+        int aux2 = 0;
+
         if (group == -1){
-            UpdateTopWords();
+            aux2 = -1;
             group = 0;
         }
 
@@ -269,6 +271,11 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
                     chooseBarrel = 0;
                 }
             }
+        }
+
+        if (aux2 == -1){
+            UpdateTopWords();
+            group = 0;
         }
 
         if (aux == null) {
@@ -377,6 +384,68 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
         return response;
     }
 
+    public String log(String username, String password) throws RemoteException{
+        String message = "";
+        int aux;
+
+        if (!activeBarrels.contains(1)){
+            return "Currently there are no barrels available!";
+        }
+
+        while(true) {
+            if (activeBarrels.get(chooseBarrel) == 1){
+                aux = barrels.get(chooseBarrel).login(username, password);
+                chooseBarrel++;
+                if (chooseBarrel == activeBarrels.toArray().length){
+                    chooseBarrel = 0;
+                }
+                break;
+            } else {
+                chooseBarrel++;
+                if (chooseBarrel == activeBarrels.size()){
+                    chooseBarrel = 0;
+                }
+            }
+        }
+
+        if (aux == 1) {
+            return "Login successful!";
+        } else {
+            return "Login failed!";
+        }
+    }
+
+    public String regist(String username, String password) throws RemoteException {
+        String message = "";
+        int aux;
+
+        if (!activeBarrels.contains(1)){
+            return "Currently there are no barrels available!";
+        }
+
+        while(true) {
+            if (activeBarrels.get(chooseBarrel) == 1){
+                aux = barrels.get(chooseBarrel).registry(username, password);
+                chooseBarrel++;
+                if (chooseBarrel == activeBarrels.toArray().length){
+                    chooseBarrel = 0;
+                }
+                break;
+            } else {
+                chooseBarrel++;
+                if (chooseBarrel == activeBarrels.size()){
+                    chooseBarrel = 0;
+                }
+            }
+        }
+
+        if (aux == 1) {
+            return "Registry successful!";
+        } else {
+            return "Registry failed!";
+        }
+
+    }
 
     public static void main(String[] args) {
         try {

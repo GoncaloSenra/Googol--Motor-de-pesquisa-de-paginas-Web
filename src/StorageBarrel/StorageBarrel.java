@@ -39,6 +39,64 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
         return word_counter;
     }
 
+    public int login(String username, String password) throws java.rmi.RemoteException{
+
+        int auxAutenticado = 0;
+
+        if (!users.isEmpty()) {
+            for(Map.Entry<String, String> entry : users.entrySet()){
+                String auxUsername = entry.getKey();
+                String auxPassword = entry.getValue();
+
+                if (username.equals(auxUsername) && password.equals(auxPassword)){
+                    auxAutenticado = 1;
+                    break;
+                }
+            }
+        }
+
+        return auxAutenticado;
+    }
+
+    public int registry(String username, String password) throws java.rmi.RemoteException{
+        int auxRegistry = 0;
+
+        if (!users.isEmpty()) {
+            for(Map.Entry<String, String> entry : users.entrySet()){
+                String auxUsername = entry.getKey();
+                String auxPassword = entry.getValue();
+
+                if (username.equals(auxUsername) && password.equals(auxPassword)){
+                    return 2;
+                }
+            }
+        }
+
+        this.users.put(username, password);
+
+        try {
+            File file = new File("src/StorageBarrel/users" + this.Id + ".obj");
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            FileOutputStream fileOut = new FileOutputStream(file, false);
+            ObjectOutputStream out = new ObjectOutputStream(fileOut);
+            out.writeObject(this.word_counter);
+            out.close();
+            fileOut.close();
+
+        } catch (FileNotFoundException e) {
+            System.out.println("FOS: " + e);
+        } catch (IOException e) {
+            System.out.println("OOS: " + e);
+        }
+
+
+        auxRegistry = 1;
+
+        return auxRegistry;
+    }
+
     public HashSet<String[]> SearchPointerLinks(String url) throws RemoteException{
         HashSet<String[]> links = new HashSet<>();
 
@@ -74,6 +132,22 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
             }
         }
 
+        try {
+            File file = new File("src/StorageBarrel/word_counter" + this.Id + ".obj");
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            FileOutputStream fileOut = new FileOutputStream(file, false);
+            ObjectOutputStream out = new ObjectOutputStream(fileOut);
+            out.writeObject(this.word_counter);
+            out.close();
+            fileOut.close();
+
+        } catch (FileNotFoundException e) {
+            System.out.println("FOS: " + e);
+        } catch (IOException e) {
+            System.out.println("OOS: " + e);
+        }
 
         HashMap<String, HashSet<IndexedURL>> copy = new HashMap<>(this.index);
 
@@ -193,6 +267,34 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
                         ObjectInputStream in = new ObjectInputStream(fileIn);
                         barrel.index = (HashMap<String, HashSet<IndexedURL>>) in.readObject();
                         barrel.pages_list = (HashMap<String, HashSet<IndexedURL>>) in.readObject();
+                        barrel.word_counter = (HashMap<String, Integer>) in.readObject();
+                        barrel.users = (HashMap<String, String>) in.readObject();
+                        in.close();
+                        fileIn.close();
+                    }
+                }
+
+                file = new File("src/StorageBarrel/users" + barrel.Id + ".obj");
+                if (!file.exists()) {
+                    file.createNewFile();
+                } else {
+                    if (file.length() != 0){
+                        FileInputStream fileIn = new FileInputStream(file);
+                        ObjectInputStream in = new ObjectInputStream(fileIn);
+                        barrel.users = (HashMap<String, String>) in.readObject();
+                        in.close();
+                        fileIn.close();
+                    }
+                }
+
+                file = new File("src/StorageBarrel/word_counter" + barrel.Id + ".obj");
+                if (!file.exists()) {
+                    file.createNewFile();
+                } else {
+                    if (file.length() != 0){
+                        FileInputStream fileIn = new FileInputStream(file);
+                        ObjectInputStream in = new ObjectInputStream(fileIn);
+                        barrel.word_counter = (HashMap<String, Integer>) in.readObject();
                         in.close();
                         fileIn.close();
                     }
@@ -201,7 +303,6 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
             } catch (FileNotFoundException e) {
                 System.out.println("FOS: " + e);
             } catch (IOException e) {
-                e.printStackTrace();
                 System.out.println("OOS: " + e);
             } catch (ClassNotFoundException e) {
                 throw new RuntimeException(e);

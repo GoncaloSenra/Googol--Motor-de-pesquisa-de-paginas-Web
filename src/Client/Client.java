@@ -58,11 +58,17 @@ public class Client extends UnicastRemoteObject implements CInterface {
             String message;
             String response = "";
             String[] splited;
+            String auxLogin = "";
+            String auxRegistry = "";
+            boolean logged = false;
             while(true) {
                 System.out.println("1 - Index link (1 <url>)\n" +
                         "2 - Search (2 <words>)\n" +
                         "3 - Search pages (3 <url>)\n" +
-                        "4 - Administration page (login required)"
+                        "4 - Administration page (login required)\n" +
+                        "5 - Login (5 <username password>)\n" +
+                        "6 - Registry (6 <username password>)\n" +
+                        "7 - Logout"
                 );
                 System.out.print("> ");
                 message = sc.nextLine();
@@ -108,7 +114,11 @@ public class Client extends UnicastRemoteObject implements CInterface {
                         }
                     }
                 } else if (splited[0].equals("3")) {
-                    response = h.SearchPointers(splited[1]);
+                    if (logged) {
+                        response = h.SearchPointers(splited[1]);
+                    } else {
+                        response = "You need to be logged!\n";
+                    }
                 } else if (splited[0].equals("4")) {
 
                     // DOWNLOADERS
@@ -144,8 +154,29 @@ public class Client extends UnicastRemoteObject implements CInterface {
                         response += "\n";
                     }
 
-                }else {
-                    response = "Command not found";
+                } else if(splited[0].equals("5")){
+                    if (logged == false) {
+                        auxLogin = h.log(splited[1], splited[2]);
+                        response = auxLogin;
+
+                        if(auxLogin.equals("Login successful")){
+                            logged = true;
+                        }
+                    } else {
+                        response = "Already logged in!\n";
+                    }
+                }else if(splited[0].equals("6")){
+                    if (logged == false) {
+                        auxRegistry = h.regist(splited[1],splited[2]);
+                        response = auxRegistry;
+                    } else {
+                        response = "Already logged in!\n";
+                    }
+
+                } else if (splited[0].equals("7")) {
+                    response = "Logout successful!\n";
+                } else {
+                    response = "Command not found\n";
                 }
 
                 System.out.println(response);

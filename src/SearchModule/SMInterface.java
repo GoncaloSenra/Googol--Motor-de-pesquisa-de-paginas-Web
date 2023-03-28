@@ -19,5 +19,7 @@ public interface SMInterface extends Remote{
     public void TerminateClient(int id) throws java.rmi.RemoteException;
     public HashMap<Integer, String> SearchLinks(String[] words, int group) throws java.rmi.RemoteException;
     public String SearchPointers(String link) throws java.rmi.RemoteException;
+    public String log(String username, String password) throws java.rmi.RemoteException;
+    public String regist(String username, String password) throws java.rmi.RemoteException;
 
 }
