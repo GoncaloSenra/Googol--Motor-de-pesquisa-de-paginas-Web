@@ -56,7 +56,7 @@ public class Client extends UnicastRemoteObject implements CInterface {
 
             Scanner sc = new Scanner(System.in);
             String message;
-            String response;
+            String response = "";
             String[] splited;
             while(true) {
                 System.out.println("1 - Index link (1 <url>)\n" +
@@ -74,7 +74,39 @@ public class Client extends UnicastRemoteObject implements CInterface {
                     for (int i = 1; i < splited.length; i++) {
                         aux[i-1] = splited[i];
                     }
-                    response = h.SearchLinks(aux);
+                    HashMap<Integer, String> opt = new HashMap<>();
+                    String mes = "";
+                    opt = h.SearchLinks(aux, -1);
+                    if (opt.get(0) != null) {
+                        response = opt.get(0);
+                    } else if (opt.get(1) != null) {
+                        response = opt.get(1);
+                    } else {
+                        int pages = 0;
+                        for (Map.Entry<Integer, String> entry : opt.entrySet()) {
+                            pages = entry.getKey();
+                            mes = entry.getValue();
+                        }
+                        System.out.println(mes);
+                        System.out.println("Press (n) for the next page, and any key to exit");
+                        String action = sc.nextLine();
+                        if (action.equals("n")) {
+                            for (int i = 1; i < pages; i++) {
+                                opt = h.SearchLinks(aux, i);
+                                for (Map.Entry<Integer, String> entry : opt.entrySet()) {
+                                    mes = entry.getValue();
+                                }
+                                System.out.println(mes);
+                                if (pages != i + 1){
+                                    System.out.println("Press (n) for the next page, and any key to exit");
+                                    action = sc.nextLine();
+                                    if(!action.equals("n")) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
                 } else if (splited[0].equals("3")) {
                     response = h.SearchPointers(splited[1]);
                 } else if (splited[0].equals("4")) {

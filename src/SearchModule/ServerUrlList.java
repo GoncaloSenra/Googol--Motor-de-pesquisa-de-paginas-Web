@@ -30,13 +30,10 @@ public class ServerUrlList extends Thread{
 
                 //Nova Thread para o canal de comunicaçao TCP
                 new Connection(clientSocket, Urls);
-
             }
         } catch(IOException e) {
             System.out.println("Listen:" + e.getMessage());
         }
-
-
     }
 
 }
@@ -86,7 +83,6 @@ class Connection extends Thread {
                     }
                 }
                 //Downloader envia lista de urls ao ServerUrlList encontrados no link enviado
-                //Termina a thread connection
                 else if (buffer[0].equals("Type | url_list")) {
                     System.out.println(data);
                     int num_links = 0;

@@ -238,13 +238,20 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
         return message;
     }
 
-    public String SearchLinks(String[] words) throws RemoteException {
+    public HashMap<Integer, String> SearchLinks(String[] words, int group) throws RemoteException {
 
         String message = "";
         ArrayList<String[]> aux;
+        HashMap <Integer, String> map = new HashMap<>();
 
         if (!activeBarrels.contains(1)){
-            return "Currently there are no barrels available!";
+            map.put(0, "Currently there are no barrels available!");
+            return map;
+        }
+
+        if (group == -1){
+            UpdateTopWords();
+            group = 0;
         }
 
         while(true) {
@@ -265,16 +272,25 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
         }
 
         if (aux == null) {
-            return "Links not found!\n";
+            map.put(0, "Links not found!\n");
+            return map;
         } else {
-            for (String[] arr: aux) {
-                message += arr[1] + " - " + arr[0] + "\n\""+ arr[2] +"\"\n";
+            int temp = 0;
+            if (aux.size() > (group * 10) + 10) {
+                temp = (group * 10) + 10;
+            } else {
+                temp = aux.size();
             }
+            for (int i = group * 10; i < temp; i++) {
+                message += aux.get(i)[1] + " - " + aux.get(i)[0] + "\n\""+ aux.get(i)[2] +"\"\n";
+            }
+            double pag = aux.size() / 10;
+            int pages = (int) Math.ceil(pag) + 1;
+            map.put(pages, message);
         }
 
-        UpdateTopWords();
 
-        return message;
+        return map;
     }
 
     public void UpdateTopWords(){

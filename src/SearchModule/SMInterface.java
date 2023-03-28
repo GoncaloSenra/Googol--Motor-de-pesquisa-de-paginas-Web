@@ -2,6 +2,7 @@
 package SearchModule;
 
 import java.rmi.*;
+import java.util.HashMap;
 import java.util.HashSet;
 
 import StorageBarrel.SBInterface;
@@ -16,7 +17,7 @@ public interface SMInterface extends Remote{
     public void TerminateBarrel(int id) throws java.rmi.RemoteException;
     public void TerminateDownloader(int id) throws java.rmi.RemoteException;
     public void TerminateClient(int id) throws java.rmi.RemoteException;
-    public String SearchLinks(String[] words) throws java.rmi.RemoteException;
+    public HashMap<Integer, String> SearchLinks(String[] words, int group) throws java.rmi.RemoteException;
     public String SearchPointers(String link) throws java.rmi.RemoteException;
 
 }
