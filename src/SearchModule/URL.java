@@ -10,10 +10,10 @@ public class URL implements Serializable {
     private ArrayList<String> urls;
     private ArrayList<String> words;
 
-    public URL(String url, String title, ArrayList<String> URLS, ArrayList<String> WORDS) {
+    public URL(String url, String title, ArrayList<String> URLS, ArrayList<String> WORDS, String QUOTE) {
         this.title = title;
         this.url = url;
-        this.quote = "";
+        this.quote = QUOTE;
         this.urls = URLS;
         this.words = WORDS;
     }

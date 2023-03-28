@@ -18,6 +18,7 @@ import java.util.Map;
 import SearchModule.SMInterface;
 import SearchModule.URL;
 
+import static java.lang.Thread.State.TERMINATED;
 
 
 public class StorageBarrel extends UnicastRemoteObject implements SBInterface, Serializable {
@@ -37,6 +38,10 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
 
     public HashMap<String, Integer> getWord_counter() throws RemoteException{
         return word_counter;
+    }
+
+    public void ExitBarrels() throws RemoteException {
+        System.exit(0);
     }
 
     public int login(String username, String password) throws java.rmi.RemoteException{
@@ -246,17 +251,6 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
             barrel.Id = sm.NewBarrel((SBInterface) barrel);
 
 
-            Runtime.getRuntime().addShutdownHook(new Thread() {
-                public void run() {
-                    try {
-                        sm.TerminateBarrel(barrel.Id);
-                    } catch (RemoteException e) {
-                        throw new RuntimeException(e);
-                    }
-                    System.out.println("Barrel is being terminated!");
-                }
-            });
-
             try {
                 File file = new File("src/StorageBarrel/index" + barrel.Id + ".obj");
                 if (!file.exists()) {
@@ -267,8 +261,6 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
                         ObjectInputStream in = new ObjectInputStream(fileIn);
                         barrel.index = (HashMap<String, HashSet<IndexedURL>>) in.readObject();
                         barrel.pages_list = (HashMap<String, HashSet<IndexedURL>>) in.readObject();
-                        barrel.word_counter = (HashMap<String, Integer>) in.readObject();
-                        barrel.users = (HashMap<String, String>) in.readObject();
                         in.close();
                         fileIn.close();
                     }
@@ -303,7 +295,7 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
             } catch (FileNotFoundException e) {
                 System.out.println("FOS: " + e);
             } catch (IOException e) {
-                System.out.println("OOS: " + e);
+                System.out.println("OIS: " + e);
             } catch (ClassNotFoundException e) {
                 throw new RuntimeException(e);
             }
@@ -311,35 +303,16 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
             MulticastClientBarrel mcb = new MulticastClientBarrel(barrel.index, barrel.pages_list,barrel.Id);
             mcb.start();
 
-            /*
-            HashSet<IndexedURL> auxset = new HashSet<>();
-            auxset.add(new IndexedURL("https://pt.wikipedia.org/wiki/Eliseu_Pereira_dos_Santos", "GOD ELISEU", null, "LENDA DAS LENDAS"));
-            auxset.add(new IndexedURL("https://inforestudante.uc.pt/nonio/security/login.do", "Inforestudante", null, "Site manhoso"));
-            barrel.index.put("Teste", auxset);
-
-            HashSet<IndexedURL> auxset2 = new HashSet<>();
-            auxset2.add(new IndexedURL("https://pt.wikipedia.org/wiki/Eliseu_Pereira_dos_Santos", "GOD ELISEU", null, "LENDA DAS LENDAS"));
-            barrel.index.put("Eliseu", auxset2);
-
-            //System.out.println(barrel.index);
-
-            try {
-                File file = new File("src/StorageBarrel/index" + barrel.Id + ".obj");
-                if (!file.exists()) {
-                    file.createNewFile();
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                public void run() {
+                    try {
+                        sm.TerminateBarrel(barrel.Id);
+                    } catch (RemoteException e) {
+                        throw new RuntimeException(e);
+                    }
+                    System.out.println("Barrel is being terminated!");
                 }
-                FileOutputStream fileOut = new FileOutputStream(file);
-                ObjectOutputStream out = new ObjectOutputStream(fileOut);
-                out.writeObject(barrel.index);
-                out.close();
-                fileOut.close();
-
-            } catch (FileNotFoundException e) {
-                System.out.println("FOS: " + e);
-            } catch (IOException e) {
-                System.out.println("OOS: " + e);
-            }
-            */
+            });
 
 
         } catch (RemoteException | NotBoundException e) {
@@ -355,6 +328,8 @@ class MulticastClientBarrel extends Thread {
     public HashMap<String, HashSet<IndexedURL>> index;
     public HashMap<String, HashSet<IndexedURL>> pages_list;
 
+    public int terminate = 0;
+
     public MulticastClientBarrel(HashMap<String, HashSet<IndexedURL>> idx, HashMap<String, HashSet<IndexedURL>> pl, int id) {
         this.index = idx;
         this.pages_list = pl;
@@ -368,6 +343,11 @@ class MulticastClientBarrel extends Thread {
             socket.joinGroup(group);
 
             while (true) {
+
+                if (terminate == 1) {
+                    this.interrupt();
+                }
+
                 byte[] buffer = new byte[100000];
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 socket.receive(packet);

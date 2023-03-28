@@ -12,4 +12,5 @@ public interface SBInterface extends Remote {
     public HashMap<String, Integer> getWord_counter() throws java.rmi.RemoteException;
     public int login(String username, String password) throws java.rmi.RemoteException;
     public int registry(String username, String password) throws  java.rmi.RemoteException;
+    public void ExitBarrels() throws java.rmi.RemoteException;
 }

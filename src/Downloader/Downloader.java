@@ -13,11 +13,9 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 
-import java.rmi.server.RemoteServer;
-import java.rmi.server.ServerNotActiveException;
+
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
@@ -43,12 +41,17 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
         System.out.println("num: " + num);
     }
 
+    public void ExitDownloaders() throws RemoteException {
+        System.exit(0);
+    }
+
     //TODO: reliable multicast
     public static void main(String[] args) {
 
         try {
             SMInterface sm = (SMInterface) LocateRegistry.getRegistry(8888).lookup("Downloader");
-            Downloader d = new Downloader();            d.Id = sm.NewDownloader((DInterface) d);
+            Downloader d = new Downloader();
+            d.Id = sm.NewDownloader((DInterface) d);
 
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 public void run() {
@@ -87,6 +90,7 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
                         ArrayList<String> links = null;
                         ArrayList<String> words = null;
                         String title = "";
+                        String quote = "";
 
                         if (p.matcher(url).matches()) {
                             try {
@@ -95,7 +99,12 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
                                 links = d.CrawlerUrls(url, doc);
                                 words = d.CrawlerWords(url, doc);
                                 title = doc.title();
-                                //TODO: Falta citaçao
+                                Element firstParagraph = doc.select("p").first();
+                                if (firstParagraph == null || firstParagraph.text().equals("Aviso(s): O browser não tem suporte ativo para JavaScript. É necessária a sua ativação para poder continuar a usar a aplicação.")) {
+                                    quote = "No quote!";
+                                } else {
+                                    quote = firstParagraph.text();
+                                }
 
 
                             } catch (IOException e) {
@@ -117,7 +126,7 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
 
                                 System.out.println("packet arrived");
                                 InetAddress group = InetAddress.getByName(d.MULTICAST_ADDRESS);
-                                outMulticast.writeObject(new URL(url, title, links, words));
+                                outMulticast.writeObject(new URL(url, title, links, words, quote));
                                 //System.out.println(packet.getTitle());
                                 byte[] buffer = bytes.toByteArray();
 
@@ -125,15 +134,15 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
                                 socket.send(Dpacket);
 
                                 //#######################################
-                                /*
-                                byte[] ackData = new byte[1024];
-                                DatagramPacket ackPacket = new DatagramPacket(ackData, ackData.length);
+                            /*
+                            byte[] ackData = new byte[1024];
+                            DatagramPacket ackPacket = new DatagramPacket(ackData, ackData.length);
 
-                                socket.receive(ackPacket);
+                            socket.receive(ackPacket);
 
-                                String ack = new String(ackPacket.getData(), 0, ackPacket.getLength());
-                                System.out.println(ack);
-                                */
+                            String ack = new String(ackPacket.getData(), 0, ackPacket.getLength());
+                            System.out.println(ack);
+                            */
 
                                 byte[] ackData = new byte[1024];
                                 DatagramPacket ackPacket = new DatagramPacket(ackData, ackData.length);
@@ -156,13 +165,13 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
                                 outMulticast.close();
 
                                 //##########################
-                                /*
-                                byte[] buffer2 = new byte[100000];
-                                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-                                socket.receive(packet);
+                            /*
+                            byte[] buffer2 = new byte[100000];
+                            DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+                            socket.receive(packet);
 
-                                System.out.println(packet);
-                                */
+                            System.out.println(packet);
+                            */
 
 
                             } else {
@@ -202,7 +211,6 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
         } catch (RemoteException | NotBoundException re) {
             System.out.println("Exception in Downloader.main: " + re);
         }
-
     }
 
     public ArrayList<String> CrawlerWords(String url, Document doc) {

@@ -1,12 +1,10 @@
 
 package SearchModule;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.EOFException;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -289,7 +287,7 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
                 temp = aux.size();
             }
             for (int i = group * 10; i < temp; i++) {
-                message += aux.get(i)[1] + " - " + aux.get(i)[0] + "\n\""+ aux.get(i)[2] +"\"\n";
+                message += aux.get(i)[1] + " - " + aux.get(i)[0] + "\n\""+ aux.get(i)[2] +"\"\n\n";
             }
             double pag = aux.size() / 10;
             int pages = (int) Math.ceil(pag) + 1;
@@ -464,6 +462,49 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
             d.rebind("Downloader", h);
 
             System.out.println("Search Module Server ready!");
+
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                public void run() {
+
+                    try {
+                        File file = new File("src/SearchModule/queue.obj");
+                        if (!file.exists()) {
+                            file.createNewFile();
+                        }
+                        FileOutputStream fileOut = new FileOutputStream(file, false);
+                        ObjectOutputStream out = new ObjectOutputStream(fileOut);
+                        out.writeObject(UrlList.getUrls());
+                        out.close();
+                        fileOut.close();
+
+                    } catch (FileNotFoundException e) {
+                        System.out.println("FOS: " + e);
+                    } catch (IOException e) {
+                        System.out.println("OOS: " + e);
+                    }
+                    UrlList.interrupt();
+
+                    /*
+                    try {
+                        System.out.println("dvfvfdvdfvdfvfd");
+                        UrlList.interrupt();
+                        ArrayList<DInterface> aux = new ArrayList<>(downloaders);
+                        for (DInterface dow : aux) {
+                            dow.ExitDownloaders();
+                        }
+                        for (SBInterface s : barrels) {
+                            s.ExitBarrels();
+                        }
+
+                    } catch (RemoteException e) {
+                        throw new RuntimeException(e);
+                    }
+                    */
+
+                    System.out.println("Search Module is being terminated!");
+                }
+            });
+
         } catch (RemoteException re) {
             System.out.println("Exception in SM.main: " + re);
         }

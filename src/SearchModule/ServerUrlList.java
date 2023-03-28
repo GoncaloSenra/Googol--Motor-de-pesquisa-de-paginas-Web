@@ -1,9 +1,13 @@
 
 package SearchModule;
 
+import StorageBarrel.IndexedURL;
+
 import java.net.*;
 import java.io.*;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -17,9 +21,30 @@ public class ServerUrlList extends Thread{
         this.Urls = new LinkedBlockingQueue<>();
     }
 
+    public LinkedBlockingQueue<String> getUrls() {
+        return Urls;
+    }
+
     public void run(){
         //index https://inforestudante.uc.pt/nonio/security/login.do
         //index https://pt.wikipedia.org/wiki/Eliseu_Pereira_dos_Santos
+
+        try {
+            File file = new File("src/SearchModule/queue.obj");
+            if (!file.exists()) {
+                    file.createNewFile();
+            } else {
+                if (file.length() != 0) {
+                    FileInputStream fileIn = new FileInputStream(file);
+                    ObjectInputStream in = new ObjectInputStream(fileIn);
+                    this.Urls = (LinkedBlockingQueue<String>) in.readObject();
+                    in.close();
+                    fileIn.close();
+                }
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
 
         try (ServerSocket listenSocket = new ServerSocket(serverPort)) {
             //System.out.println("A escuta no porto 6000");
