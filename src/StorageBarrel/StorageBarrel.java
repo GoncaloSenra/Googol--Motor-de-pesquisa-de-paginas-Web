@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.zip.GZIPInputStream;
 
 import SearchModule.SMInterface;
 import SearchModule.URL;
@@ -86,7 +87,7 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
             }
             FileOutputStream fileOut = new FileOutputStream(file, false);
             ObjectOutputStream out = new ObjectOutputStream(fileOut);
-            out.writeObject(this.word_counter);
+            out.writeObject(this.users);
             out.close();
             fileOut.close();
 
@@ -355,7 +356,24 @@ class MulticastClientBarrel extends Thread {
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 socket.receive(packet);
 
-                ByteArrayInputStream bytes = new ByteArrayInputStream(buffer);
+
+                // UNZIP THE PACKET
+                ByteArrayInputStream comp = new ByteArrayInputStream(packet.getData(), 0, packet.getLength());
+                GZIPInputStream zip = new GZIPInputStream(new BufferedInputStream(comp));
+                ByteArrayOutputStream outputS = new ByteArrayOutputStream();
+
+                byte[] temp = new byte[1024];
+                int read;
+
+                while ((read = zip.read(temp)) != -1) {
+                    outputS.write(temp, 0, read);
+                }
+
+                zip.close();
+                outputS.close();
+                byte[] serializedObject = outputS.toByteArray();
+
+                ByteArrayInputStream bytes = new ByteArrayInputStream(serializedObject);
                 ObjectInputStream in = new ObjectInputStream(bytes);
 
                 URL data = (URL) in.readObject();

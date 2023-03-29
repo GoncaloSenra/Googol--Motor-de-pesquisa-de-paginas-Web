@@ -4,8 +4,6 @@ package SearchModule;
 import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.rmi.NotBoundException;
-import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -17,7 +15,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import Client.Client;
 import Downloader.DInterface;
 import StorageBarrel.SBInterface;
 import Client.CInterface;
@@ -254,28 +251,17 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
         if (group == -1){
             aux2 = -1;
             group = 0;
-        }
-
-        while(true) {
-            if (activeBarrels.get(chooseBarrel) == 1){
-                aux = barrels.get(chooseBarrel).SearchWords(words);
-                chooseBarrel++;
-                System.out.println(chooseBarrel);
-                if (chooseBarrel == activeBarrels.toArray().length){
-                    chooseBarrel = 0;
-                }
-                break;
-            } else {
-                chooseBarrel++;
-                if (chooseBarrel == activeBarrels.size()){
-                    chooseBarrel = 0;
-                }
+            chooseBarrel++;
+            System.out.println(chooseBarrel);
+            if (chooseBarrel == activeBarrels.toArray().length){
+                chooseBarrel = 0;
             }
         }
 
+        aux = AuxSearchLinks(words);
+
         if (aux2 == -1){
             UpdateTopWords();
-            group = 0;
         }
 
         if (aux == null) {
@@ -298,6 +284,34 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
 
 
         return map;
+    }
+
+    public ArrayList<String[]> AuxSearchLinks(String[] words) {
+
+        ArrayList<String[]> aux = new ArrayList<>();
+
+        while (true) {
+            try{
+                while(true) {
+                    if (activeBarrels.get(chooseBarrel) == 1){
+                        aux = barrels.get(chooseBarrel).SearchWords(words);
+                        System.out.println("Barrel chosen: " + chooseBarrel);
+                        break;
+                    } else {
+                        chooseBarrel++;
+                        if (chooseBarrel == activeBarrels.size()){
+                            chooseBarrel = 0;
+                        }
+                    }
+                }
+                break;
+            } catch (RemoteException e) {
+                System.out.println("Choosing another barrel!");
+            }
+        }
+
+        return aux;
+
     }
 
     public void UpdateTopWords(){

@@ -1,6 +1,7 @@
 
 package Client;
 
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
@@ -73,13 +74,17 @@ public class Client extends UnicastRemoteObject implements CInterface {
                     if (splited[0].equals("1")) {
                         response = h.IndexUrl(splited[1]);
                     } else if (splited[0].equals("2")) {
+
                         String[] aux = new String[splited.length - 1];
                         for (int i = 1; i < splited.length; i++) {
                             aux[i - 1] = splited[i];
                         }
+
                         HashMap<Integer, String> opt = new HashMap<>();
                         String mes = "";
                         opt = h.SearchLinks(aux, -1);
+
+
                         if (opt.get(0) != null) {
                             response = opt.get(0);
                         } else if (opt.get(1) != null) {
@@ -109,6 +114,7 @@ public class Client extends UnicastRemoteObject implements CInterface {
                                     }
                                 }
                             }
+                            response = "";
                         }
                     } else if (splited[0].equals("3")) {
                         if (logged) {
@@ -179,8 +185,8 @@ public class Client extends UnicastRemoteObject implements CInterface {
                     System.out.println(response);
 
                 }
-            } catch (Exception e) {
-                System.out.println("Exception in main: " + e);
+            } catch (RemoteException | NotBoundException e) {
+                System.out.println("Trying to reconnect with the SearchModule!");
             }
         }
     }

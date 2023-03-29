@@ -18,6 +18,7 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
+import java.util.zip.GZIPOutputStream;
 
 import SearchModule.URL;
 import SearchModule.SMInterface;
@@ -137,10 +138,19 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
                                 ObjectOutputStream outMulticast = new ObjectOutputStream(bytes);
 
                                 outMulticast.writeObject(new URL(url, title, links, words, quote));
+
+
                                 //System.out.println(packet.getTitle());
                                 byte[] buffer = bytes.toByteArray();
 
-                                DatagramPacket Dpacket = new DatagramPacket(buffer, buffer.length, group, d.PORT);
+                                // ZIP THE PACKET
+                                ByteArrayOutputStream bytescompressed = new ByteArrayOutputStream();
+                                GZIPOutputStream gzipos = new GZIPOutputStream(bytescompressed);
+                                gzipos.write(buffer);
+                                gzipos.close();
+                                byte[] compressedObject = bytescompressed.toByteArray();
+
+                                DatagramPacket Dpacket = new DatagramPacket(compressedObject, compressedObject.length, group, d.PORT);
                                 socket.send(Dpacket);
 
                                 //#######################################
