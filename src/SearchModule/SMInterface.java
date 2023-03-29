@@ -21,5 +21,8 @@ public interface SMInterface extends Remote{
     public String SearchPointers(String link) throws java.rmi.RemoteException;
     public String log(String username, String password) throws java.rmi.RemoteException;
     public String regist(String username, String password) throws java.rmi.RemoteException;
+    public int getPacket() throws java.rmi.RemoteException;
+    public void increasePacket(URL link) throws java.rmi.RemoteException;
+    public void UpdateTopWordsAfterReading() throws java.rmi.RemoteException;
 
 }

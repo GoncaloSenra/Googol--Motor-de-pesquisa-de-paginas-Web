@@ -32,6 +32,7 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
     private int Id;
     private String IP = "localhost";
     private int numBarrels;
+    public int terminate = 0;
 
     public Downloader() throws RemoteException {
         super();
@@ -43,7 +44,8 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
     }
 
     public void ExitDownloaders() throws RemoteException {
-        System.exit(0);
+        //System.exit(0);
+        terminate = 1;
     }
 
     //TODO: reliable multicast
@@ -57,13 +59,31 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 public void run() {
                     try {
-                        sm.TerminateDownloader(d.Id);
+                        if (d.terminate == 0)
+                            sm.TerminateDownloader(d.Id);
                     } catch (RemoteException e) {
                         throw new RuntimeException(e);
                     }
                     System.out.println("Downloader is being terminated!");
                 }
             });
+
+            Thread t = new Thread(new Runnable(){
+                public void run() {
+                    while(true) {
+                        if (d.terminate == 2) {
+                            System.exit(0);
+                        }
+                        try {
+                            Thread.sleep(2000);
+                        } catch (java.lang.InterruptedException e) {
+                            System.out.println(e.getMessage());
+                        }
+                    }
+                }
+            });
+
+            t.start();
 
             String regex =  "(http|https|ftp)://[\\w_-]+(\\.[\\w_-]+)+([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?";
 
@@ -82,6 +102,12 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
                     DataOutputStream out = new DataOutputStream(s.getOutputStream());
 
                     while (true) {
+
+                        if (d.terminate == 1) {
+                            d.terminate++;
+                            break;
+                        }
+
                         Pattern p = Pattern.compile(regex);
 
                         out.writeUTF("Type | new_url");
@@ -137,62 +163,67 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
                                 ByteArrayOutputStream bytes = new ByteArrayOutputStream();
                                 ObjectOutputStream outMulticast = new ObjectOutputStream(bytes);
 
-                                outMulticast.writeObject(new URL(url, title, links, words, quote));
 
+                                int numPacket = sm.getPacket();
+                                URL link = new URL(url, title, links, words, quote, numPacket);
+                                outMulticast.writeObject(link);
+                                sm.increasePacket(link);
 
                                 //System.out.println(packet.getTitle());
                                 byte[] buffer = bytes.toByteArray();
 
                                 // ZIP THE PACKET
+
                                 ByteArrayOutputStream bytescompressed = new ByteArrayOutputStream();
                                 GZIPOutputStream gzipos = new GZIPOutputStream(bytescompressed);
                                 gzipos.write(buffer);
                                 gzipos.close();
                                 byte[] compressedObject = bytescompressed.toByteArray();
 
+
                                 DatagramPacket Dpacket = new DatagramPacket(compressedObject, compressedObject.length, group, d.PORT);
                                 socket.send(Dpacket);
 
                                 //#######################################
-                                                            /*
-                                                            byte[] ackData = new byte[1024];
-                                                            DatagramPacket ackPacket = new DatagramPacket(ackData, ackData.length);
+                                                                    /*
+                                                                    byte[] ackData = new byte[1024];
+                                                                    DatagramPacket ackPacket = new DatagramPacket(ackData, ackData.length);
 
-                                                            socket.receive(ackPacket);
+                                                                    socket.receive(ackPacket);
 
-                                                            String ack = new String(ackPacket.getData(), 0, ackPacket.getLength());
-                                                            System.out.println(ack);
-                                                            */
+                                                                    String ack = new String(ackPacket.getData(), 0, ackPacket.getLength());
+                                                                    System.out.println(ack);
+                                                                    */
 
-                                /*
-                                byte[] ackData = new byte[1024];
-                                DatagramPacket ackPacket = new DatagramPacket(ackData, ackData.length);
-                                socket.receive(ackPacket);
+                                        /*
+                                        byte[] ackData = new byte[1024];
+                                        DatagramPacket ackPacket = new DatagramPacket(ackData, ackData.length);
+                                        socket.receive(ackPacket);
 
-                                byte[] data = new byte[ackPacket.getLength()];
+                                        byte[] data = new byte[ackPacket.getLength()];
 
-                                System.arraycopy(ackPacket.getData(), ackPacket.getOffset(), data, 0, ackPacket.getLength());
+                                        System.arraycopy(ackPacket.getData(), ackPacket.getOffset(), data, 0, ackPacket.getLength());
 
-                                ByteBuffer buffer3 = ByteBuffer.wrap(data);
+                                        ByteBuffer buffer3 = ByteBuffer.wrap(data);
 
-                                int sequenceNumber = buffer3.getInt();
+                                        int sequenceNumber = buffer3.getInt();
 
-                                System.out.println(sequenceNumber);
-                                */
+                                        System.out.println(sequenceNumber);
+                                        */
 
                                 //#######################################
 
                                 bytes.close();
                                 outMulticast.close();
 
-                                                                                //##########################
-                                                                            /*
-                                                                            byte[] buffer2 = new byte[100000];
-                                                                            DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-                                                                            socket.receive(packet);
+                                //##########################
+                                                                                    /*
+                                                                                    byte[] buffer2 = new byte[100000];
+                                                                                    DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+                                                                                    socket.receive(packet);
 
-                                                                            System.out.println(packet);
-                                                                            */
+                                                                                    System.out.println(packet);
+                                                                                    */
 
 
                             } else {

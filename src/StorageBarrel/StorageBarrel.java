@@ -5,7 +5,7 @@ import java.io.*;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
-import java.nio.ByteBuffer;
+import java.net.SocketTimeoutException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -19,7 +19,6 @@ import java.util.zip.GZIPInputStream;
 import SearchModule.SMInterface;
 import SearchModule.URL;
 
-import static java.lang.Thread.State.TERMINATED;
 
 
 public class StorageBarrel extends UnicastRemoteObject implements SBInterface, Serializable {
@@ -28,6 +27,8 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
     public HashMap<String, Integer> word_counter;
     public HashMap<String, String> users;
     private int Id;
+    public int terminate = 0;
+    public int lastPacket = 0;
 
     public StorageBarrel() throws RemoteException {
         super();
@@ -42,7 +43,7 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
     }
 
     public void ExitBarrels() throws RemoteException {
-        System.exit(0);
+        terminate = 1;
     }
 
     public int login(String username, String password) throws java.rmi.RemoteException{
@@ -250,14 +251,18 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
             SMInterface sm = (SMInterface) LocateRegistry.getRegistry(7777).lookup("Barrel");
             StorageBarrel barrel = new StorageBarrel();
 
+            barrel.Id = sm.NewBarrel((SBInterface) barrel);
+
             try {
                 File file = new File("src/StorageBarrel/index" + barrel.Id + ".obj");
                 if (!file.exists()) {
                     file.createNewFile();
+
                 } else {
                     if (file.length() != 0){
                         FileInputStream fileIn = new FileInputStream(file);
                         ObjectInputStream in = new ObjectInputStream(fileIn);
+                        barrel.lastPacket = in.readInt();
                         barrel.index = (HashMap<String, HashSet<IndexedURL>>) in.readObject();
                         barrel.pages_list = (HashMap<String, HashSet<IndexedURL>>) in.readObject();
                         in.close();
@@ -299,18 +304,18 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
                 throw new RuntimeException(e);
             }
 
-            barrel.Id = sm.NewBarrel((SBInterface) barrel);
-
-            MulticastClientBarrel mcb = new MulticastClientBarrel(barrel.index, barrel.pages_list,barrel.Id);
+            MulticastClientBarrel mcb = new MulticastClientBarrel(barrel.index, barrel.pages_list,barrel.Id, barrel.lastPacket);
             mcb.start();
+
 
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 public void run() {
                     try {
                         mcb.terminate = 1;
-                        Thread.sleep(3000);
-                        mcb.interrupt();
-                        sm.TerminateBarrel(barrel.Id);
+                        if (barrel.terminate == 0)
+                            sm.TerminateBarrel(barrel.Id);
+                        mcb.join();
+
                     } catch (RemoteException | InterruptedException e) {
                         throw new RuntimeException(e);
                     }
@@ -318,6 +323,24 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
                 }
             });
 
+            Thread t = new Thread(new Runnable() {
+                public void run() {
+                    while(true) {
+                        if (barrel.terminate == 1) {
+                            System.exit(0);
+                        }
+                        try {
+                            Thread.sleep(2000);
+                        } catch (java.lang.InterruptedException e) {
+                            System.out.println(e.getMessage());
+                        }
+                    }
+                }
+            });
+
+            t.start();
+
+            sm.UpdateTopWordsAfterReading();
 
         } catch (RemoteException | NotBoundException e) {
             System.out.println("Exception in SB.main: " + e);
@@ -331,54 +354,64 @@ class MulticastClientBarrel extends Thread {
     private int barrelId;
     public HashMap<String, HashSet<IndexedURL>> index;
     public HashMap<String, HashSet<IndexedURL>> pages_list;
-
+    //public ArrayList<Integer> packetsReceived = new ArrayList<>();
+    public int lastPacket;
     public int terminate = 0;
 
-    public MulticastClientBarrel(HashMap<String, HashSet<IndexedURL>> idx, HashMap<String, HashSet<IndexedURL>> pl, int id) {
+    public MulticastClientBarrel(HashMap<String, HashSet<IndexedURL>> idx, HashMap<String, HashSet<IndexedURL>> pl, int id, int lastpacket) {
         this.index = idx;
         this.pages_list = pl;
         this.barrelId = id;
+        this.lastPacket = lastpacket;
     }
     public void run() {
         MulticastSocket socket = null;
         try {
             socket = new MulticastSocket(PORT);  // create socket and bind it
+            socket.setSoTimeout(5000);
             InetAddress group = InetAddress.getByName(MULTICAST_ADDRESS);
             socket.joinGroup(group);
 
             while (true) {
 
-                if (terminate == 1) {
-                    break;
-                }
-
-                byte[] buffer = new byte[100000];
-                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-                socket.receive(packet);
+                try {
 
 
-                // UNZIP THE PACKET
-                ByteArrayInputStream comp = new ByteArrayInputStream(packet.getData(), 0, packet.getLength());
-                GZIPInputStream zip = new GZIPInputStream(new BufferedInputStream(comp));
-                ByteArrayOutputStream outputS = new ByteArrayOutputStream();
+                    byte[] buffer = new byte[100000];
+                    DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+                    socket.receive(packet);
 
-                byte[] temp = new byte[1024];
-                int read;
 
-                while ((read = zip.read(temp)) != -1) {
-                    outputS.write(temp, 0, read);
-                }
+                    // UNZIP THE PACKET
 
-                zip.close();
-                outputS.close();
-                byte[] serializedObject = outputS.toByteArray();
+                    ByteArrayInputStream comp = new ByteArrayInputStream(packet.getData(), 0, packet.getLength());
+                    GZIPInputStream zip = new GZIPInputStream(new BufferedInputStream(comp));
+                    ByteArrayOutputStream outputS = new ByteArrayOutputStream();
 
-                ByteArrayInputStream bytes = new ByteArrayInputStream(serializedObject);
-                ObjectInputStream in = new ObjectInputStream(bytes);
+                    byte[] temp = new byte[1024];
+                    int read;
 
-                URL data = (URL) in.readObject();
+                    while ((read = zip.read(temp)) != -1) {
+                        outputS.write(temp, 0, read);
+                    }
 
-                //######################################################
+                    zip.close();
+                    outputS.close();
+                    byte[] serializedObject = outputS.toByteArray();
+
+                    ByteArrayInputStream bytes = new ByteArrayInputStream(serializedObject);
+                    ObjectInputStream in = new ObjectInputStream(bytes);
+
+
+                    URL data = (URL) in.readObject();
+
+                    if (this.lastPacket + 1 == data.getPacket()) {
+                        this.lastPacket = data.getPacket();
+                    } else {
+                        // call function from SM
+                    }
+
+                    //######################################################
 
                 /*ACK
                 DatagramPacket ackPacket = new DatagramPacket(new byte[4], 4);
@@ -421,84 +454,85 @@ class MulticastClientBarrel extends Thread {
                 socket.send(ackPacket);
                 */
 
-                //######################################################
+                    //######################################################
 
 
-                //System.out.println("Received packet from " + packet.getAddress().getHostAddress() + ":" + packet.getPort() + " with message:");
-                System.out.println("> " + data.getUrl() + " " + data.getTitle());
+                    //System.out.println("Received packet from " + packet.getAddress().getHostAddress() + ":" + packet.getPort() + " with message:");
+                    System.out.println("> " + data.getUrl() + " " + data.getTitle());
 
-                for (String word : data.getWords()){
-                    HashSet<IndexedURL> aux = this.index.get(word);
-                    if (aux == null) {
-                        aux = new HashSet<IndexedURL>();
-                        aux.add(new IndexedURL(data.getUrl(), data.getTitle(), data.getUrls(), data.getQuote()));
-                        //System.out.println("isNullllllllllllllllllll");
-                    } else{
-                        boolean contains = false;
-                        for (IndexedURL idx: aux){
-                            //System.out.println("-----> " + data.getUrl() + " | " + idx.getUrl());
-                            if (idx.getUrl().equals(data.getUrl())){
-                                //System.out.println("Entreiiiiiiiiiiiiiii");
-                                contains = true;
-                                break;
-                            }
-                        }
-                        if (!contains) {
+                    for (String word : data.getWords()) {
+                        HashSet<IndexedURL> aux = this.index.get(word);
+                        if (aux == null) {
+                            aux = new HashSet<IndexedURL>();
                             aux.add(new IndexedURL(data.getUrl(), data.getTitle(), data.getUrls(), data.getQuote()));
-                        }
-                    }
-
-                    this.index.put(word, aux);
-                }
-
-                for (String link: data.getUrls()) {
-                    HashSet<IndexedURL> aux_pages;
-                    if (pages_list == null) {
-                        pages_list = new HashMap<String, HashSet<IndexedURL>>();
-                    }
-                    if ((aux_pages = pages_list.get(link)) == null){
-                        aux_pages = new HashSet<IndexedURL>();
-                        aux_pages.add(new IndexedURL(data.getUrl(), data.getTitle(), data.getUrls(), data.getQuote()));
-                    } else {
-                        boolean contains = false;
-                        for (IndexedURL idx: aux_pages){
-                            //System.out.println("-----> " + data.getUrl() + " | " + idx.getUrl());
-                            if (idx.getUrl().equals(data.getUrl())){
-                                //System.out.println("Entreiiiiiiiiiiiiiii");
-                                contains = true;
-                                break;
+                        } else {
+                            boolean contains = false;
+                            for (IndexedURL idx : aux) {
+                                //System.out.println("-----> " + data.getUrl() + " | " + idx.getUrl());
+                                if (idx.getUrl().equals(data.getUrl())) {
+                                    contains = true;
+                                    break;
+                                }
+                            }
+                            if (!contains) {
+                                aux.add(new IndexedURL(data.getUrl(), data.getTitle(), data.getUrls(), data.getQuote()));
                             }
                         }
-                        if (!contains) {
-                            aux_pages.add(new IndexedURL(data.getUrl(), data.getTitle(), data.getUrls(), data.getQuote()));
+
+                        this.index.put(word, aux);
+                    }
+
+                    for (String link : data.getUrls()) {
+                        HashSet<IndexedURL> aux_pages;
+                        if (pages_list == null) {
+                            pages_list = new HashMap<String, HashSet<IndexedURL>>();
                         }
+                        if ((aux_pages = pages_list.get(link)) == null) {
+                            aux_pages = new HashSet<IndexedURL>();
+                            aux_pages.add(new IndexedURL(data.getUrl(), data.getTitle(), data.getUrls(), data.getQuote()));
+                        } else {
+                            boolean contains = false;
+                            for (IndexedURL idx : aux_pages) {
+                                if (idx.getUrl().equals(data.getUrl())) {
+                                    contains = true;
+                                    break;
+                                }
+                            }
+                            if (!contains) {
+                                aux_pages.add(new IndexedURL(data.getUrl(), data.getTitle(), data.getUrls(), data.getQuote()));
+                            }
+                        }
+                        pages_list.put(link, aux_pages);
                     }
-                    pages_list.put(link, aux_pages);
-                }
 
-                //System.out.println("+++++++" + index.size());
 
-                try {
-                    File file = new File("src/StorageBarrel/index" + this.barrelId + ".obj");
-                    if (!file.exists()) {
-                        file.createNewFile();
+                    try {
+                        File file = new File("src/StorageBarrel/index" + this.barrelId + ".obj");
+                        if (!file.exists()) {
+                            file.createNewFile();
+                        }
+                        FileOutputStream fileOut = new FileOutputStream(file, false);
+                        ObjectOutputStream out = new ObjectOutputStream(fileOut);
+                        out.writeInt(this.lastPacket);
+                        out.writeObject(this.index);
+                        out.writeObject(this.pages_list);
+                        out.close();
+                        fileOut.close();
+
+                    } catch (FileNotFoundException e) {
+                        System.out.println("FOS: " + e);
+                    } catch (IOException e) {
+                        System.out.println("OOS: " + e);
                     }
-                    FileOutputStream fileOut = new FileOutputStream(file, false);
-                    ObjectOutputStream out = new ObjectOutputStream(fileOut);
-                    out.writeObject(this.index);
-                    out.writeObject(this.pages_list);
-                    out.close();
-                    fileOut.close();
 
-                } catch (FileNotFoundException e) {
-                    System.out.println("FOS: " + e);
-                } catch (IOException e) {
-                    System.out.println("OOS: " + e);
+
+                    bytes.close();
+                    in.close();
+                } catch(SocketTimeoutException e) {
+                    if (terminate == 1) {
+                        break;
+                    }
                 }
-
-
-                bytes.close();
-                in.close();
             }
         } catch (IOException e) {
             e.printStackTrace();

@@ -9,13 +9,24 @@ public class URL implements Serializable {
     private String quote;
     private ArrayList<String> urls;
     private ArrayList<String> words;
+    private int packet;
 
-    public URL(String url, String title, ArrayList<String> URLS, ArrayList<String> WORDS, String QUOTE) {
+    public URL(String url, String title, ArrayList<String> URLS, ArrayList<String> WORDS, String QUOTE, int packet) {
         this.title = title;
         this.url = url;
         this.quote = QUOTE;
         this.urls = URLS;
         this.words = WORDS;
+        this.packet = packet;
+
+    }
+
+    public int getPacket() {
+        return packet;
+    }
+
+    public void setPacket(int packet) {
+        this.packet = packet;
     }
 
     public String getUrl() {

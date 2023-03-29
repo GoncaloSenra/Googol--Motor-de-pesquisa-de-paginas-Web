@@ -19,6 +19,8 @@ import Downloader.DInterface;
 import StorageBarrel.SBInterface;
 import Client.CInterface;
 
+import javax.sql.rowset.spi.SyncResolver;
+
 
 public class SearchModule extends UnicastRemoteObject implements SMInterface {
 
@@ -31,10 +33,22 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
     public HashMap<Integer, String[]> infoDownloaders = new HashMap<>();
     public HashMap<Integer, String[]> infoBarrels = new HashMap<>();
     public int chooseBarrel;
+    public int packetID;
+    public HashMap<Integer, URL> packets = new HashMap<>();
 
     public SearchModule() throws RemoteException {
         super();
         this.chooseBarrel = 0;
+        this.packetID = 0;
+    }
+
+    public int getPacket() throws RemoteException{
+        return packetID;
+    }
+
+    public void increasePacket(URL link) throws RemoteException{
+        packets.put(packetID, link);
+        this.packetID++;
     }
 
     public int NewBarrel(SBInterface Ibarrel) throws RemoteException {
@@ -88,7 +102,7 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
             ci.UpadateBarrels(infoBarrels);
         }
 
-        UpdateTopWords();
+        //UpdateTopWords();
 
         System.out.println("NEW BARREL -> " + id);
         return id;
@@ -314,6 +328,10 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
 
     }
 
+    public void UpdateTopWordsAfterReading() throws RemoteException{
+        UpdateTopWords();
+    }
+
     public void UpdateTopWords(){
 
         ArrayList<HashMap<String, Integer>> all_words_counters = new ArrayList<>();
@@ -502,20 +520,25 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
 
 
                     try {
+
+
+                        while (!downloaders.isEmpty()) {
+                            downloaders.get(0).ExitDownloaders();
+                            downloaders.remove(0);
+                            activeDownloaders.remove(0);
+                        }
+                        while (!barrels.isEmpty()) {
+                            barrels.get(0).ExitBarrels();
+                            barrels.remove(0);
+                            activeBarrels.remove(0);
+                        }
+
+                        try {
+                            Thread.sleep(5000);
+                        } catch (java.lang.InterruptedException e) {
+                            System.out.println(e.getMessage());
+                        }
                         UrlList.interrupt();
-                        ArrayList<DInterface> aux = new ArrayList<>(downloaders);
-                        for (DInterface dow : aux) {
-                            dow.ExitDownloaders();
-                            //aux.remove(dow);
-                            try {
-                                Thread.sleep(1000);
-                            } catch (java.lang.InterruptedException e) {
-                                System.out.println(e.getMessage());
-                            }
-                        }
-                        for (SBInterface s : barrels) {
-                            s.ExitBarrels();
-                        }
 
                     } catch (RemoteException e) {
                         System.out.println("Exception terminating SM: " + e.getMessage());;
