@@ -8,7 +8,6 @@ import org.jsoup.select.Elements;
 
 import java.net.*;
 import java.io.*;
-import java.nio.ByteBuffer;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -26,6 +25,7 @@ import SearchModule.SMInterface;
 
 public class Downloader extends UnicastRemoteObject implements DInterface, Serializable  {
 
+    public static int MAX_RETRY = 3;
     private static int serversocket = 6000;
     private String MULTICAST_ADDRESS = "224.3.2.1";
     private int PORT = 4321;
@@ -33,6 +33,7 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
     private String IP = "localhost";
     private int numBarrels;
     public int terminate = 0;
+    public int UDPPORT;
 
     public Downloader() throws RemoteException {
         super();
@@ -55,6 +56,21 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
             SMInterface sm = (SMInterface) LocateRegistry.getRegistry(8888).lookup("Downloader");
             Downloader d = new Downloader();
             d.Id = sm.NewDownloader((DInterface) d);
+
+            // Define UDPPORT
+            int digits = 0;
+            int auxID = d.Id + 1;
+            while (auxID != 0) {
+                auxID = auxID / 10;
+                digits++;
+            }
+            auxID = d.Id + 1;
+            for (int i = 0; i < 4 - digits; i++) {
+                auxID = auxID * 10;
+            }
+
+            d.UDPPORT = auxID;
+            //System.out.println(d.UDPPORT);
 
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 public void run() {
@@ -94,25 +110,19 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
 
                 System.out.println("SOCKET=" + s);
 
+                socket = new MulticastSocket();
+                InetAddress group = InetAddress.getByName(d.MULTICAST_ADDRESS);
+
+                DataInputStream in = new DataInputStream(s.getInputStream());
+                DataOutputStream out = new DataOutputStream(s.getOutputStream());
+
                 try {
-                    socket = new MulticastSocket();
-                    InetAddress group = InetAddress.getByName(d.MULTICAST_ADDRESS);
-
-                    DataInputStream in = new DataInputStream(s.getInputStream());
-                    DataOutputStream out = new DataOutputStream(s.getOutputStream());
-
                     while (true) {
 
                         if (d.terminate == 1) {
                             d.terminate++;
                             break;
                         }
-
-                        Pattern p = Pattern.compile(regex);
-
-                        out.writeUTF("Type | new_url");
-                        String url = in.readUTF();
-
                         System.out.println("0");
                         while (d.numBarrels == 0) {
                             try {
@@ -123,6 +133,12 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
                             //System.out.println(d.numBarrels);
                         }
                         System.out.println("1");
+
+                        Pattern p = Pattern.compile(regex);
+
+                        out.writeUTF("Type | new_url");
+                        String url = in.readUTF();
+
 
                         System.out.println("Url: " + url);
 
@@ -165,15 +181,14 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
 
 
                                 int numPacket = sm.getPacket();
-                                URL link = new URL(url, title, links, words, quote, numPacket);
-                                outMulticast.writeObject(link);
+                                URL link = new URL(url, title, links, words, quote, numPacket, d.UDPPORT);
                                 sm.increasePacket(link);
+                                outMulticast.writeObject(link);
 
                                 //System.out.println(packet.getTitle());
                                 byte[] buffer = bytes.toByteArray();
 
                                 // ZIP THE PACKET
-
                                 ByteArrayOutputStream bytescompressed = new ByteArrayOutputStream();
                                 GZIPOutputStream gzipos = new GZIPOutputStream(bytescompressed);
                                 gzipos.write(buffer);
@@ -182,49 +197,46 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
 
 
                                 DatagramPacket Dpacket = new DatagramPacket(compressedObject, compressedObject.length, group, d.PORT);
-                                socket.send(Dpacket);
 
-                                //#######################################
-                                                                    /*
-                                                                    byte[] ackData = new byte[1024];
-                                                                    DatagramPacket ackPacket = new DatagramPacket(ackData, ackData.length);
 
-                                                                    socket.receive(ackPacket);
+                                // ACKS
+                                int count = 0;
+                                int times = 0;
 
-                                                                    String ack = new String(ackPacket.getData(), 0, ackPacket.getLength());
-                                                                    System.out.println(ack);
-                                                                    */
+                                while (times < MAX_RETRY) {
+                                    System.out.println("TRY: " + (times + 1));
+                                    System.out.println("BARRELS: " + d.numBarrels);
+                                    try (DatagramSocket aSocket = new DatagramSocket(d.UDPPORT)) {
+                                        aSocket.setSoTimeout(2000);
+                                        System.out.println("Socket Datagram à escuta no porto " + d.UDPPORT);
+                                        socket.send(Dpacket);
 
-                                        /*
-                                        byte[] ackData = new byte[1024];
-                                        DatagramPacket ackPacket = new DatagramPacket(ackData, ackData.length);
-                                        socket.receive(ackPacket);
+                                        while(count < d.numBarrels){
+                                            byte[] buff = new byte[128];
+                                            DatagramPacket request = new DatagramPacket(buff, buff.length);
+                                            aSocket.receive(request);
+                                            String str = new String(request.getData(), 0, request.getLength());
 
-                                        byte[] data = new byte[ackPacket.getLength()];
+                                            if (str.equals("Received!")) {
+                                                System.out.println("Recebido =)");
+                                                count++;
+                                            }
 
-                                        System.arraycopy(ackPacket.getData(), ackPacket.getOffset(), data, 0, ackPacket.getLength());
+                                        }
 
-                                        ByteBuffer buffer3 = ByteBuffer.wrap(data);
-
-                                        int sequenceNumber = buffer3.getInt();
-
-                                        System.out.println(sequenceNumber);
-                                        */
-
-                                //#######################################
+                                        times++;
+                                    } catch(SocketTimeoutException e) {
+                                        System.out.println("TimeOut, sending packet again!");
+                                    }catch (SocketException e) {
+                                        System.out.println("Socket: " + e.getMessage());
+                                    } catch (IOException e) {
+                                        System.out.println("IO: " + e.getMessage());
+                                    }
+                                    break;
+                                }
 
                                 bytes.close();
                                 outMulticast.close();
-
-                                //##########################
-                                                                                    /*
-                                                                                    byte[] buffer2 = new byte[100000];
-                                                                                    DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-                                                                                    socket.receive(packet);
-
-                                                                                    System.out.println(packet);
-                                                                                    */
-
 
                             } else {
                                 message = "Type | url_list; item_count | 0";
@@ -246,7 +258,7 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
                         }
                     }
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    System.out.println("IO: " + e.getMessage());
                 } finally {
                     socket.close();
                 }

@@ -97,15 +97,18 @@ class Connection extends Thread {
                     out.writeUTF("Link(s) received!");
                     System.out.println(data);
                     String[] aux = null;
-                    aux = buffer[1].split("\\| ");
-                    num_links = Integer.parseInt(aux[1]);
-                    System.out.println("num_links: "+ num_links);
-                    for (int i = 2; i < num_links + 2; i++) {
-                        aux = buffer[i].split("\\| ");
-                        //System.out.println(Arrays.toString(aux));
-                        if (aux.length == 2 && !Urls.contains(aux[1]))
-                            Urls.add(aux[1]);
+                    if (buffer.length > 1){
+                        aux = buffer[1].split("\\| ");
+                        num_links = Integer.parseInt(aux[1]);
+                        System.out.println("num_links: "+ num_links);
+                        for (int i = 2; i < num_links + 2; i++) {
+                            aux = buffer[i].split("\\| ");
+                            //System.out.println(Arrays.toString(aux));
+                            if (aux.length == 2 && !Urls.contains(aux[1]))
+                                Urls.add(aux[1]);
+                        }
                     }
+
                 }
                 //Downloader envia lista de urls ao ServerUrlList encontrados no link enviado
                 else if (buffer[0].equals("Type | url_list")) {

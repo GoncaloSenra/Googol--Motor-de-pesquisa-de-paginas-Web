@@ -24,5 +24,6 @@ public interface SMInterface extends Remote{
     public int getPacket() throws java.rmi.RemoteException;
     public void increasePacket(URL link) throws java.rmi.RemoteException;
     public void UpdateTopWordsAfterReading() throws java.rmi.RemoteException;
+    public void BarrelBackup(URL temp) throws java.rmi.RemoteException;
 
 }

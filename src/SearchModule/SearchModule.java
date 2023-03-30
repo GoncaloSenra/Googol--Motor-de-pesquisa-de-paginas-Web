@@ -42,6 +42,11 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
         this.packetID = 0;
     }
 
+    public void BarrelBackup(URL temp) throws RemoteException {
+        int numPacket = temp.getPacket();
+        this.packets.put(numPacket, temp);
+    }
+
     public int getPacket() throws RemoteException{
         return packetID;
     }

@@ -10,15 +10,24 @@ public class URL implements Serializable {
     private ArrayList<String> urls;
     private ArrayList<String> words;
     private int packet;
+    private int UDPPORT;
 
-    public URL(String url, String title, ArrayList<String> URLS, ArrayList<String> WORDS, String QUOTE, int packet) {
+    public URL(String url, String title, ArrayList<String> URLS, ArrayList<String> WORDS, String QUOTE, int packet, int port) {
         this.title = title;
         this.url = url;
         this.quote = QUOTE;
         this.urls = URLS;
         this.words = WORDS;
         this.packet = packet;
+        this.UDPPORT = port;
+    }
 
+    public int getUDPPORT() {
+        return UDPPORT;
+    }
+
+    public void setUDPPORT(int UDPPORT) {
+        this.UDPPORT = UDPPORT;
     }
 
     public int getPacket() {

@@ -2,10 +2,7 @@
 package StorageBarrel;
 
 import java.io.*;
-import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
-import java.net.SocketTimeoutException;
+import java.net.*;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -350,6 +347,7 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
 
 class MulticastClientBarrel extends Thread {
     private String MULTICAST_ADDRESS = "224.3.2.1";
+    private String UDP_ADDRESS = "localhost";
     private int PORT = 4321;
     private int barrelId;
     public HashMap<String, HashSet<IndexedURL>> index;
@@ -376,11 +374,9 @@ class MulticastClientBarrel extends Thread {
 
                 try {
 
-
                     byte[] buffer = new byte[100000];
                     DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                     socket.receive(packet);
-
 
                     // UNZIP THE PACKET
 
@@ -404,6 +400,27 @@ class MulticastClientBarrel extends Thread {
 
 
                     URL data = (URL) in.readObject();
+
+                    if (this.lastPacket >= data.getPacket()) {
+                        continue;
+                    }
+
+                    try (DatagramSocket aSocket = new DatagramSocket()) {
+
+                        String message = "Received!";
+                        byte [] m = message.getBytes();
+
+                        InetAddress aHost = InetAddress.getByName(UDP_ADDRESS);
+                        DatagramPacket request = new DatagramPacket(m, m.length, aHost, data.getUDPPORT());
+                        aSocket.send(request);
+
+                    }catch (SocketException e){
+                        System.out.println("Socket: " + e.getMessage());
+                    }catch (IOException e){
+                        System.out.println("IO: " + e.getMessage());
+                    }
+
+
 
                     if (this.lastPacket + 1 == data.getPacket()) {
                         this.lastPacket = data.getPacket();
