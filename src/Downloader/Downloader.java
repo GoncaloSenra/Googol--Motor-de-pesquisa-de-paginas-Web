@@ -39,7 +39,7 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
         super();
     }
 
-    public void UpdateNumBarrels(int num) throws RemoteException{
+    public void UpdateNumBarrels(int num) throws RemoteException {
         this.numBarrels = num;
         System.out.println("num: " + num);
     }
@@ -202,6 +202,7 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
                                 // ACKS
                                 int count = 0;
                                 int times = 0;
+                                boolean sent = false;
 
                                 while (times < MAX_RETRY) {
                                     System.out.println("TRY: " + (times + 1));
@@ -224,15 +225,21 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
 
                                         }
 
-                                        times++;
                                     } catch(SocketTimeoutException e) {
                                         System.out.println("TimeOut, sending packet again!");
+                                        times++;
+                                        continue;
                                     }catch (SocketException e) {
                                         System.out.println("Socket: " + e.getMessage());
                                     } catch (IOException e) {
                                         System.out.println("IO: " + e.getMessage());
                                     }
+                                    sent = true;
                                     break;
+                                }
+
+                                if (sent == false) {
+                                    message = "Type | url_list; item_count | 0; item | " + link.getUrl();
                                 }
 
                                 bytes.close();

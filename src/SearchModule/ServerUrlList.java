@@ -125,6 +125,23 @@ class Connection extends Thread {
                     return;
                 }
 
+                try {
+                    File file = new File("src/SearchModule/queue.obj");
+                    if (!file.exists()) {
+                        file.createNewFile();
+                    }
+                    FileOutputStream fileOut = new FileOutputStream(file, false);
+                    ObjectOutputStream out = new ObjectOutputStream(fileOut);
+                    out.writeObject(Urls);
+                    out.close();
+                    fileOut.close();
+
+                } catch (FileNotFoundException e) {
+                    System.out.println("FOS: " + e);
+                } catch (IOException e) {
+                    System.out.println("OOS: " + e);
+                }
+
                 //resposta=data.toUpperCase();
                 //out.writeUTF(resposta);
             }

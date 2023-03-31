@@ -177,6 +177,7 @@ public class Client extends UnicastRemoteObject implements CInterface {
                         }
 
                     } else if (splited[0].equals("7")) {
+                        logged = false;
                         response = "Logout successful!\n";
                     } else {
                         response = "Command not found\n";
