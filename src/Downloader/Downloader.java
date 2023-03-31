@@ -123,16 +123,26 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
                             d.terminate++;
                             break;
                         }
-                        System.out.println("0");
+
+                        boolean close = false;
                         while (d.numBarrels == 0) {
                             try {
                                 Thread.sleep(1000);
                             } catch (java.lang.InterruptedException e) {
                                 System.out.println(e.getMessage());
                             }
+
+                            if (d.terminate == 1) {
+                                close = true;
+                                break;
+                            }
                             //System.out.println(d.numBarrels);
                         }
-                        System.out.println("1");
+
+                        if (close) {
+                            continue;
+                        }
+
 
                         Pattern p = Pattern.compile(regex);
 
@@ -266,9 +276,12 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
                         }
                     }
                 } catch (IOException e) {
+                    e.printStackTrace();
                     System.out.println("IO: " + e.getMessage());
                 } finally {
+                    System.out.println("Closing Sockets");
                     socket.close();
+                    s.close();
                 }
 
             } catch (IllegalArgumentException e) {
@@ -278,10 +291,10 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
             } catch (EOFException e) {
                 System.out.println("EOF:" + e.getMessage());
             } catch (IOException e) {
-                System.out.println("IO:" + e.getMessage());
+                System.out.println("IO: " + e.getMessage());
             }
         } catch (RemoteException | NotBoundException re) {
-            System.out.println("Exception in Downloader.main: " + re);
+            System.out.println("Connection with Search Module failed!");
         }
     }
 

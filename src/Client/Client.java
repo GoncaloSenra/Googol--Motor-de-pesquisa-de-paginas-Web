@@ -46,7 +46,7 @@ public class Client extends UnicastRemoteObject implements CInterface {
                         try {
                             h.TerminateClient(c.Id);
                         } catch (RemoteException e) {
-                            throw new RuntimeException(e);
+                            System.out.println("Search Module not active!");
                         }
                         System.out.println("Client is being terminated!");
                     }
