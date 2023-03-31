@@ -3,6 +3,7 @@ package StorageBarrel;
 import java.io.Serializable;
 import java.util.ArrayList;
 
+// Classe guardada num Hashmap com toda a informação sobre um url
 public class IndexedURL implements Serializable {
     private String url;
     private String title;

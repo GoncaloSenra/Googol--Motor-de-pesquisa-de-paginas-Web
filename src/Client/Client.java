@@ -17,6 +17,9 @@ public class Client extends UnicastRemoteObject implements CInterface {
     private HashMap<Integer, String[]> infoBarrels;
     private ArrayList<String[]> topSearches;
 
+    /*
+    *   Funções para dar update de todas as informações do painel de administração
+    * */
     public void UpadateDownloaders(HashMap<Integer, String[]> info) throws RemoteException{
         this.infoDownloaders = info;
     }
@@ -41,6 +44,7 @@ public class Client extends UnicastRemoteObject implements CInterface {
                 Client c = new Client();
                 h.NewClient((CInterface) c);
 
+                // Thread que termina o cliente de forma segura
                 Runtime.getRuntime().addShutdownHook(new Thread() {
                     public void run() {
                         try {
@@ -71,9 +75,13 @@ public class Client extends UnicastRemoteObject implements CInterface {
                     System.out.print("> ");
                     message = sc.nextLine();
                     splited = message.split(" ");
+
+                    // Indexar Link
                     if (splited[0].equals("1")) {
                         response = h.IndexUrl(splited[1]);
-                    } else if (splited[0].equals("2")) {
+                    }
+                    // Procura por urls que tenham todas as palavras inseridas pelo utilizador
+                    else if (splited[0].equals("2")) {
 
                         String[] aux = new String[splited.length - 1];
                         for (int i = 1; i < splited.length; i++) {
@@ -82,12 +90,15 @@ public class Client extends UnicastRemoteObject implements CInterface {
 
                         HashMap<Integer, String> opt = new HashMap<>();
                         String mes = "";
+                        // Pesquisa a primeira página (10 links) (group = -1 -> dá update ao contador de palavras)
                         opt = h.SearchLinks(aux, -1);
 
-
+                        // Não existem barris ativos
                         if (opt.get(0) != null) {
                             response = opt.get(0);
-                        } else if (opt.get(1) != null) {
+                        }
+                        // Não existem links com as palavras introduzidas
+                        else if (opt.get(1) != null) {
                             response = opt.get(1);
                         } else {
                             int pages = 0;
@@ -96,9 +107,10 @@ public class Client extends UnicastRemoteObject implements CInterface {
                                 mes = entry.getValue();
                             }
                             System.out.println(mes);
-                            System.out.println("Press (n) for the next page, and any key to exit");
+                            System.out.println("Press (n) for the next page, or any key to exit");
                             String action = sc.nextLine();
                             if (action.equals("n")) {
+                                // Percorre todas as páginas (10 em 10)
                                 for (int i = 1; i < pages; i++) {
                                     opt = h.SearchLinks(aux, i);
                                     for (Map.Entry<Integer, String> entry : opt.entrySet()) {
@@ -106,7 +118,7 @@ public class Client extends UnicastRemoteObject implements CInterface {
                                     }
                                     System.out.println(mes);
                                     if (pages != i + 1) {
-                                        System.out.println("Press (n) for the next page, and any key to exit");
+                                        System.out.println("Press (n) for the next page, or any key to exit");
                                         action = sc.nextLine();
                                         if (!action.equals("n")) {
                                             break;
@@ -116,13 +128,17 @@ public class Client extends UnicastRemoteObject implements CInterface {
                             }
                             response = "";
                         }
-                    } else if (splited[0].equals("3")) {
+                    }
+                    // Pesquisa por links que apontem para o link introduzido pelo utilizador
+                    else if (splited[0].equals("3")) {
                         if (logged) {
                             response = h.SearchPointers(splited[1]);
                         } else {
                             response = "You need to be logged!\n";
                         }
-                    } else if (splited[0].equals("4")) {
+                    }
+                    // Mostra página de administração
+                    else if (splited[0].equals("4")) {
 
                         // DOWNLOADERS
                         response = "Active Downloaders: \n";
@@ -157,7 +173,9 @@ public class Client extends UnicastRemoteObject implements CInterface {
                             response += "\n";
                         }
 
-                    } else if (splited[0].equals("5")) {
+                    }
+                    // Login
+                    else if (splited[0].equals("5")) {
                         if (!logged) {
                             auxLogin = h.log(splited[1], splited[2]);
                             response = auxLogin;
@@ -168,7 +186,9 @@ public class Client extends UnicastRemoteObject implements CInterface {
                         } else {
                             response = "Already logged in!\n";
                         }
-                    } else if (splited[0].equals("6")) {
+                    }
+                    // Registo
+                    else if (splited[0].equals("6")) {
                         if (!logged) {
                             auxRegistry = h.regist(splited[1], splited[2]);
                             response = auxRegistry;
@@ -176,7 +196,9 @@ public class Client extends UnicastRemoteObject implements CInterface {
                             response = "Already logged in!\n";
                         }
 
-                    } else if (splited[0].equals("7")) {
+                    }
+                    // Logout
+                    else if (splited[0].equals("7")) {
                         logged = false;
                         response = "Logout successful!\n";
                     } else {

@@ -3,6 +3,7 @@ package SearchModule;
 import java.io.Serializable;
 import java.util.ArrayList;
 
+// Classe utilizada para guardar toda a informação necessária para ser enviada por multicast
 public class URL implements Serializable {
     private String url;
     private String title;

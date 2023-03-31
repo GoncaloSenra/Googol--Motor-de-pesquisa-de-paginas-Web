@@ -56,6 +56,9 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
         this.packetID++;
     }
 
+    /*
+    *   Funções que quando chamadas adicionam interface ao Array de interfaces e devolvem o ID ao programa que chamou a função
+    * */
     public int NewBarrel(SBInterface Ibarrel) throws RemoteException {
         int id = 0;
         boolean all_active = true;
@@ -185,6 +188,9 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
         return id;
     }
 
+    /*
+    *   Funções que terminam programas de forma segura (removendo as suas interfaces do Array de interfaces)
+    * */
     public void TerminateBarrel(int id) throws RemoteException {
         activeBarrels.set(id, 0);
         int numBarrels = 0;
@@ -217,6 +223,7 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
         clients.remove(id);
     }
 
+    // Função que pesquisa por links que apontem para o link introduzido pelo utilizador
     public String SearchPointers(String link) throws RemoteException {
 
         String message = "";
@@ -254,6 +261,8 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
         return message;
     }
 
+
+    // Função que pesquisa por urls que tenham todas as palavras inseridas pelo utilizador
     public HashMap<Integer, String> SearchLinks(String[] words, int group) throws RemoteException {
 
         String message = "";
@@ -305,6 +314,7 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
         return map;
     }
 
+    // Função que ajuda a recuperação de uma pesquisa quando um barrel é terminado inesperadamente
     public ArrayList<String[]> AuxSearchLinks(String[] words) {
 
         ArrayList<String[]> aux = new ArrayList<>();
@@ -333,10 +343,12 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
 
     }
 
+    // Função que auxilia o Barril que quando inicia envia logo as TopSearches para o cliente
     public void UpdateTopWordsAfterReading() throws RemoteException{
         UpdateTopWords();
     }
 
+    // Função que atualiza as palavras mais pesquisadas
     public void UpdateTopWords(){
 
         ArrayList<HashMap<String, Integer>> all_words_counters = new ArrayList<>();
@@ -392,6 +404,7 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
         }
     }
 
+    // Função que envia um link dado pelo utilizador para a thread ServerUrlList (Queue) por TCP
     public String IndexUrl(String url) throws RemoteException {
         //System.out.println("print do lado do servidor...!.");
         String message = "Type | url_list; item_count | 1; item | " + url;
@@ -421,6 +434,7 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
         return response;
     }
 
+    // Função que envia as credências de login para os StorageBarrels e recebe a informação de que o utilizador fez login ou não
     public String log(String username, String password) throws RemoteException{
         String message = "";
         int aux;
@@ -452,28 +466,18 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
         }
     }
 
+
+    // Função que envia as credências de registo para os StorageBarrels e recebe a informação de que o utilizador fez registo ou não
     public String regist(String username, String password) throws RemoteException {
         String message = "";
-        int aux;
+        int aux = 0;
 
         if (!activeBarrels.contains(1)){
             return "Currently there are no barrels available!";
         }
 
-        while(true) {
-            if (activeBarrels.get(chooseBarrel) == 1){
-                aux = barrels.get(chooseBarrel).registry(username, password);
-                chooseBarrel++;
-                if (chooseBarrel == activeBarrels.toArray().length){
-                    chooseBarrel = 0;
-                }
-                break;
-            } else {
-                chooseBarrel++;
-                if (chooseBarrel == activeBarrels.size()){
-                    chooseBarrel = 0;
-                }
-            }
+        for (SBInterface sb : barrels) {
+            aux = sb.registry(username, password);
         }
 
         if (aux == 1) {
@@ -486,6 +490,8 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
 
     public static void main(String[] args) {
         try {
+
+            //Inicia a thread da Queue e cria os registrys necessários para a comunicação RMI
             ServerUrlList UrlList = new ServerUrlList();
             UrlList.start();
 
@@ -502,6 +508,7 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
 
             System.out.println("Search Module Server ready!");
 
+            // Thread que quando deteta SIGINT termina o Search Module, Downloaders e Barrels, e interrompe a thread da Queue
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 public void run() {
 

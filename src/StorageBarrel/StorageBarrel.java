@@ -35,14 +35,17 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
         this.users = new HashMap<>();
     }
 
+    // Função chamada pelo Search Module para pedir a contagem de palavras
     public HashMap<String, Integer> getWord_counter() throws RemoteException{
         return word_counter;
     }
 
+    // Função chamada pelo Search Module para fechar o Barrel
     public void ExitBarrels() throws RemoteException {
         terminate = 1;
     }
 
+    // Função de login
     public int login(String username, String password) throws java.rmi.RemoteException{
 
         int auxAutenticado = 0;
@@ -62,6 +65,7 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
         return auxAutenticado;
     }
 
+    // Função de registo
     public int registry(String username, String password) throws java.rmi.RemoteException{
         int auxRegistry = 0;
 
@@ -78,6 +82,7 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
 
         this.users.put(username, password);
 
+        // A informação dos clientes é imediatamente escrita no ficheiro de objetos, para não haver perdas de informação
         try {
             File file = new File("src/StorageBarrel/users" + this.Id + ".obj");
             if (!file.exists()) {
@@ -101,6 +106,7 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
         return auxRegistry;
     }
 
+    // Função para enviar links que apontem para outros links
     public HashSet<String[]> SearchPointerLinks(String url) throws RemoteException{
         HashSet<String[]> links = new HashSet<>();
 
@@ -123,6 +129,8 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
         return null;
     }
 
+    // Função que envia os links que contenham as palavras pedidas pelo utilizador,
+    // por ordem de relevância
     public ArrayList<String[]> SearchWords(String[] words) throws RemoteException{
 
         //Upadte Word Counter
@@ -200,6 +208,7 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
             }
         }
 
+        // Algoritmo para ordenar os links por ordem de relevância (insertion sort)
         ArrayList<String[]> sorted_urls = new ArrayList<>();
         for (Map.Entry<String, String[]> entry : auxdata.entrySet()) {
             String[] aux = new String[3];
@@ -250,6 +259,7 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
 
             barrel.Id = sm.NewBarrel((SBInterface) barrel);
 
+            // O Barrel quando inicia vai buscar toda a informação armazenada nos ficheiros de objetos
             try {
                 File file = new File("src/StorageBarrel/index" + barrel.Id + ".obj");
                 if (!file.exists()) {
@@ -301,10 +311,11 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
                 throw new RuntimeException(e);
             }
 
+            // Inicio da thread que vai receber os links dos downloaders e guarda-los nos ficheiros
             MulticastClientBarrel mcb = new MulticastClientBarrel(barrel.index, barrel.pages_list,barrel.Id, barrel.lastPacket);
             mcb.start();
 
-
+            // Thread que terminam o Barrel de forma segura
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 public void run() {
                     try {
@@ -337,6 +348,8 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
 
             t.start();
 
+            // Depois de guardar toda a informação em memória atualiza o SearchModule, (que por sua vez atualiza os clientes)
+            // com as palavras mais pesquisadas
             sm.UpdateTopWordsAfterReading();
 
         } catch (RemoteException | NotBoundException e) {
@@ -406,6 +419,7 @@ class MulticastClientBarrel extends Thread {
                         continue;
                     }*/
 
+                    // Envia ack ao Downloader que lhe enviou o pacote
                     try (DatagramSocket aSocket = new DatagramSocket()) {
                         //System.out.println(data.getUrl());
                         String message = "Received!";
@@ -433,6 +447,7 @@ class MulticastClientBarrel extends Thread {
                     //System.out.println("Received packet from " + packet.getAddress().getHostAddress() + ":" + packet.getPort() + " with message:");
                     System.out.println("> " + data.getUrl() + " " + data.getTitle());
 
+                    // Guarda toda a informação nos ficheiros de objetos
                     for (String word : data.getWords()) {
                         HashSet<IndexedURL> aux = this.index.get(word);
                         if (aux == null) {
@@ -501,7 +516,9 @@ class MulticastClientBarrel extends Thread {
 
                     bytes.close();
                     in.close();
-                } catch(SocketTimeoutException e) {
+                }
+                // Se o socket multicast levar timeout e a variável de condição for ativada a thread fecha o socket e termina
+                catch(SocketTimeoutException e) {
                     if (terminate == 1) {
                         break;
                     }

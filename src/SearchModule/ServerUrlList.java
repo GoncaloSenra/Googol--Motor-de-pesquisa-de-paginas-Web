@@ -26,9 +26,8 @@ public class ServerUrlList extends Thread{
     }
 
     public void run(){
-        //index https://inforestudante.uc.pt/nonio/security/login.do
-        //index https://pt.wikipedia.org/wiki/Eliseu_Pereira_dos_Santos
 
+        // Se houver informação sobre a última execução a thread vai buscar o objeto BlockingQueue ao ficheiro
         try {
             File file = new File("src/SearchModule/queue.obj");
             if (!file.exists()) {
@@ -46,6 +45,7 @@ public class ServerUrlList extends Thread{
             throw new RuntimeException(e);
         }
 
+        // Socket TCP que comunica com os Downloaders e o Search Module
         try (ServerSocket listenSocket = new ServerSocket(serverPort)) {
             //System.out.println("A escuta no porto 6000");
             System.out.println("LISTEN SOCKET=" + listenSocket);

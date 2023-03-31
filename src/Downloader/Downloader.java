@@ -39,17 +39,19 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
         super();
     }
 
+    // Função chamada pelo Search Module para atualizar o número de Barrels ativos
     public void UpdateNumBarrels(int num) throws RemoteException {
         this.numBarrels = num;
         System.out.println("num: " + num);
     }
 
+    // Função chamada pelo Search Module para fechar o Downloader
     public void ExitDownloaders() throws RemoteException {
         //System.exit(0);
         terminate = 1;
     }
 
-    //TODO: reliable multicast
+    
     public static void main(String[] args) {
 
         try {
@@ -70,8 +72,8 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
             }
 
             d.UDPPORT = auxID;
-            //System.out.println(d.UDPPORT);
 
+            // Thread que termina o Downloader de forma segura de maneira a não haver perda de informação
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 public void run() {
                     try {
@@ -101,11 +103,12 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
 
             t.start();
 
+            // Regex para filtrar links indesejados (por exemplo 'javascript- popup ...')
             String regex =  "(http|https|ftp)://[\\w_-]+(\\.[\\w_-]+)+([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?";
 
             MulticastSocket socket = null;
 
-            // Open TCP Socket
+            // Abrir Socket TCP
             try (Socket s = new Socket(d.IP, serversocket)) {
 
                 System.out.println("SOCKET=" + s);
@@ -119,11 +122,13 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
                 try {
                     while (true) {
 
+                        // Quadno a variável de condição terminate é ativada (função ExitDownloader) o ciclo é quebrado
                         if (d.terminate == 1) {
                             d.terminate++;
                             break;
                         }
 
+                        // Este ciclo verifica se existem barrels ativos, logo, se não houver nenhum barrel o Downloader não processa nenhum link
                         boolean close = false;
                         while (d.numBarrels == 0) {
                             try {
@@ -146,6 +151,7 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
 
                         Pattern p = Pattern.compile(regex);
 
+                        // Pede novo link à Queue
                         out.writeUTF("Type | new_url");
                         String url = in.readUTF();
 
@@ -164,6 +170,8 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
                                 links = d.CrawlerUrls(url, doc);
                                 words = d.CrawlerWords(url, doc);
                                 title = doc.title();
+
+                                //Encontra o elemento HTML paragraph (<p>) e retira o texto associado para a Quote
                                 Element firstParagraph = doc.select("p").first();
                                 if (firstParagraph == null || firstParagraph.text().equals("Aviso(s): O browser não tem suporte ativo para JavaScript. É necessária a sua ativação para poder continuar a usar a aplicação.")) {
                                     quote = "No quote!";
@@ -184,8 +192,7 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
                                     message = message + ("item | " + str + "; ");
                                 }
 
-                                // Envia pacote por multicast
-
+                                // Compacta o pacote e envia por multicast
                                 ByteArrayOutputStream bytes = new ByteArrayOutputStream();
                                 ObjectOutputStream outMulticast = new ObjectOutputStream(bytes);
 
@@ -198,7 +205,6 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
                                 //System.out.println(packet.getTitle());
                                 byte[] buffer = bytes.toByteArray();
 
-                                // ZIP THE PACKET
                                 ByteArrayOutputStream bytescompressed = new ByteArrayOutputStream();
                                 GZIPOutputStream gzipos = new GZIPOutputStream(bytescompressed);
                                 gzipos.write(buffer);
@@ -214,6 +220,8 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
                                 int times = 0;
                                 boolean sent = false;
 
+                                // Tenta receber um acknowledgment de todos os Barrels ativos, no máximo 3 vezes (MAX_RETRY),
+                                // se não conseguir adiciona novamente o link à fila
                                 while (times < MAX_RETRY) {
                                     System.out.println("TRY: " + (times + 1));
                                     System.out.println("BARRELS: " + d.numBarrels);
@@ -298,6 +306,7 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
         }
     }
 
+    // Retira as palavras do url eviado pela fila
     public ArrayList<String> CrawlerWords(String url, Document doc) {
         ArrayList<String> arraywords = new ArrayList<>();
 
@@ -313,6 +322,7 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
         return arraywords;
     }
 
+    // Retira as links do url eviado pela fila
     public ArrayList<String> CrawlerUrls(String url, Document doc) {
         ArrayList<String> arraylinks = new ArrayList<>();
 
