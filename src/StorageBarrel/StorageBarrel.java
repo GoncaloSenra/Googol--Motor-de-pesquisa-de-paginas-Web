@@ -401,12 +401,13 @@ class MulticastClientBarrel extends Thread {
 
                     URL data = (URL) in.readObject();
 
+                    /*
                     if (this.lastPacket >= data.getPacket()) {
                         continue;
-                    }
+                    }*/
 
                     try (DatagramSocket aSocket = new DatagramSocket()) {
-
+                        //System.out.println(data.getUrl());
                         String message = "Received!";
                         byte [] m = message.getBytes();
 
@@ -427,51 +428,6 @@ class MulticastClientBarrel extends Thread {
                     } else {
                         // call function from SM
                     }
-
-                    //######################################################
-
-                /*ACK
-                DatagramPacket ackPacket = new DatagramPacket(new byte[4], 4);
-
-                ByteBuffer buffer2 = ByteBuffer.allocate(128);
-                buffer2.putInt(1);
-
-                ackPacket.setData(buffer2.array());
-
-                ackPacket.setSocketAddress(packet.getSocketAddress());
-
-                socket.send(ackPacket);
-                */
-
-                /*
-                byte[] ack = new byte[128];
-
-
-                String ackb = "ACKKKKKKKKKKKKKKKKKK";
-
-                ack = ackb.getBytes(StandardCharsets.UTF_8);
-
-                DatagramPacket ackPacket = new DatagramPacket(ack, ack.length, group, PORT);
-                socket.send(ackPacket);
-                */
-
-                /*
-                byte[] ackb = new byte[1000];
-
-                ByteArrayOutputStream bytes2 = new ByteArrayOutputStream();
-                ObjectOutputStream outMulticast = new ObjectOutputStream(bytes2);
-
-
-                String ack = "ACKKKKKKKKKKKKKKKKKK";
-
-                ackb = bytes2.toByteArray();
-                outMulticast.writeObject(ack);
-
-                DatagramPacket ackPacket = new DatagramPacket(ackb, 1, group, PORT);
-                socket.send(ackPacket);
-                */
-
-                    //######################################################
 
 
                     //System.out.println("Received packet from " + packet.getAddress().getHostAddress() + ":" + packet.getPort() + " with message:");

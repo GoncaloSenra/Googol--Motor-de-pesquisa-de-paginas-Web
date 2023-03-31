@@ -238,8 +238,9 @@ public class Downloader extends UnicastRemoteObject implements DInterface, Seria
                                     break;
                                 }
 
+
                                 if (sent == false) {
-                                    message = "Type | url_list; item_count | 0; item | " + link.getUrl();
+                                    message = "Type | url_list; item_count | 1; item | " + link.getUrl();
                                 }
 
                                 bytes.close();
