@@ -284,9 +284,11 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
             if (chooseBarrel == activeBarrels.toArray().length){
                 chooseBarrel = 0;
             }
+            aux = AuxSearchLinks(words, 1);
+        } else {
+            aux = AuxSearchLinks(words, 0);
         }
 
-        aux = AuxSearchLinks(words);
 
         if (aux2 == -1){
             UpdateTopWords();
@@ -315,7 +317,7 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
     }
 
     // Função que ajuda a recuperação de uma pesquisa quando um barrel é terminado inesperadamente
-    public ArrayList<String[]> AuxSearchLinks(String[] words) {
+    public ArrayList<String[]> AuxSearchLinks(String[] words, int update) {
 
         ArrayList<String[]> aux = new ArrayList<>();
 
@@ -323,7 +325,7 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
             try{
                 while(true) {
                     if (activeBarrels.get(chooseBarrel) == 1){
-                        aux = barrels.get(chooseBarrel).SearchWords(words);
+                        aux = barrels.get(chooseBarrel).SearchWords(words, update);
                         System.out.println("Barrel chosen: " + chooseBarrel);
                         break;
                     } else {
@@ -350,7 +352,6 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
 
     // Função que atualiza as palavras mais pesquisadas
     public void UpdateTopWords(){
-
         ArrayList<HashMap<String, Integer>> all_words_counters = new ArrayList<>();
         HashMap<String, Integer> result = new HashMap<>();
 

@@ -131,34 +131,36 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
 
     // Função que envia os links que contenham as palavras pedidas pelo utilizador,
     // por ordem de relevância
-    public ArrayList<String[]> SearchWords(String[] words) throws RemoteException{
+    public ArrayList<String[]> SearchWords(String[] words, int update) throws RemoteException{
 
         //Upadte Word Counter
-        for (String word : words) {
-            if (word_counter.get(word) == null) {
-                word_counter.put(word, 1);
-            } else {
-                int count = word_counter.get(word);
-                count ++;
-                word_counter.put(word, count);
+        if (update == 1) {
+            for (String word : words) {
+                if (word_counter.get(word) == null) {
+                    word_counter.put(word, 1);
+                } else {
+                    int count = word_counter.get(word);
+                    count++;
+                    word_counter.put(word, count);
+                }
             }
-        }
 
-        try {
-            File file = new File("src/StorageBarrel/word_counter" + this.Id + ".obj");
-            if (!file.exists()) {
-                file.createNewFile();
+            try {
+                File file = new File("src/StorageBarrel/word_counter" + this.Id + ".obj");
+                if (!file.exists()) {
+                    file.createNewFile();
+                }
+                FileOutputStream fileOut = new FileOutputStream(file, false);
+                ObjectOutputStream out = new ObjectOutputStream(fileOut);
+                out.writeObject(this.word_counter);
+                out.close();
+                fileOut.close();
+
+            } catch (FileNotFoundException e) {
+                System.out.println("FOS: " + e);
+            } catch (IOException e) {
+                System.out.println("OOS: " + e);
             }
-            FileOutputStream fileOut = new FileOutputStream(file, false);
-            ObjectOutputStream out = new ObjectOutputStream(fileOut);
-            out.writeObject(this.word_counter);
-            out.close();
-            fileOut.close();
-
-        } catch (FileNotFoundException e) {
-            System.out.println("FOS: " + e);
-        } catch (IOException e) {
-            System.out.println("OOS: " + e);
         }
 
         HashMap<String, HashSet<IndexedURL>> copy = new HashMap<>(this.index);
@@ -254,7 +256,7 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
 
         try {
             //rmi://localhost:7777/
-            SMInterface sm = (SMInterface) LocateRegistry.getRegistry(7777).lookup("rmi://localhost:7777/Barrel");
+            SMInterface sm = (SMInterface) LocateRegistry.getRegistry(7777).lookup("Barrel");
             StorageBarrel barrel = new StorageBarrel();
 
             barrel.Id = sm.NewBarrel((SBInterface) barrel);
