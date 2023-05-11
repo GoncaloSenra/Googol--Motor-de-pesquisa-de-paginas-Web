@@ -107,11 +107,53 @@ public class Client extends UnicastRemoteObject implements CInterface {
                                 mes = entry.getValue();
                             }
                             System.out.println(mes);
+
+                            System.out.println("Pages: 1/" + pages);
                             System.out.println("Press (n) for the next page, or any key to exit");
                             String action = sc.nextLine();
                             if (action.equals("n")) {
                                 // Percorre todas as páginas (10 em 10)
-                                for (int i = 1; i < pages; i++) {
+                                int i = 1;
+                                while (true) {
+                                    opt = h.SearchLinks(aux, i);
+                                    for (Map.Entry<Integer, String> entry : opt.entrySet()) {
+                                        mes = entry.getValue();
+                                    }
+                                    System.out.println(mes);
+
+                                    System.out.println("Pages: " + (i + 1) + "/" + (pages));
+
+                                    if (i < pages - 1 && i > 0) {
+                                        System.out.println("Press (n) for the next page, (p) for the previous page, or any key to exit");
+                                        action = sc.nextLine();
+                                        if (action.equals("n")) {
+                                            i++;
+                                        } else if (action.equals("p")) {
+                                            i--;
+                                        } else {
+                                            break;
+                                        }
+                                    } else if (i == pages - 1) {
+                                        System.out.println("Press (p) for the previous page, or any key to exit");
+                                        action = sc.nextLine();
+                                        if (action.equals("p")) {
+                                            i--;
+                                        } else {
+                                            break;
+                                        }
+                                    } else if (i == 0) {
+                                        System.out.println("Press (n) for the next page, or any key to exit");
+                                        action = sc.nextLine();
+                                        if (action.equals("n")) {
+                                            i++;
+                                        } else {
+                                            break;
+                                        }
+                                    }
+
+                                }
+
+                                /*for (i = 1; i < pages; i++) {
                                     opt = h.SearchLinks(aux, i);
                                     for (Map.Entry<Integer, String> entry : opt.entrySet()) {
                                         mes = entry.getValue();
@@ -124,7 +166,7 @@ public class Client extends UnicastRemoteObject implements CInterface {
                                             break;
                                         }
                                     }
-                                }
+                                }*/
                             }
                             response = "";
                         }

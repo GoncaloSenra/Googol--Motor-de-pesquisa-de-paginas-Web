@@ -253,8 +253,8 @@ public class StorageBarrel extends UnicastRemoteObject implements SBInterface, S
     public static void main(String[] args) {
 
         try {
-
-            SMInterface sm = (SMInterface) LocateRegistry.getRegistry(7777).lookup("Barrel");
+            //rmi://localhost:7777/
+            SMInterface sm = (SMInterface) LocateRegistry.getRegistry(7777).lookup("rmi://localhost:7777/Barrel");
             StorageBarrel barrel = new StorageBarrel();
 
             barrel.Id = sm.NewBarrel((SBInterface) barrel);
