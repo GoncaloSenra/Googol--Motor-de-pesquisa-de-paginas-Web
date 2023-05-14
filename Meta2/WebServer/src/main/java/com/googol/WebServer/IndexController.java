@@ -34,12 +34,6 @@ public class IndexController {
     }
     */
 
-    @GetMapping("/greeting")
-    public String greeting(@RequestParam(name="name", required=false, defaultValue="World") String name, Model model) {
-        model.addAttribute("name", name);
-        model.addAttribute("othername", "SD");
-        return "greeting";
-    }
     @GetMapping("")
     public String index(Model model) {
 

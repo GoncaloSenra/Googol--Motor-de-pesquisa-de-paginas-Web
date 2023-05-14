@@ -5,6 +5,7 @@ public class Tokens {
     private String words;
 
     public Tokens() {
+        this.words = "";
     }
 
     public String getWords() {

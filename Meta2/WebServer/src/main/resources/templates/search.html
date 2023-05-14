@@ -27,12 +27,9 @@
 <div class="container">
   <!-- Specific content for the home page -->
   <h1>Search!</h1>
+
   <form th:action="@{/search}" method="get">
-    <input class="form-control" id="exampleDataList" placeholder="Goooooooooooooooooooooooooooooooogol" th:field="${tokens}" />
-  </form>
-  <br>
-  <form th:action="@{/search}" method="get">
-    <input class="form-control" id="exampleDataList" placeholder="Goooooooooooooooooooooooooooooooogol" th:value="${tokens}" name="tokens" />
+    <input class="form-control" id="exampleDataList2" placeholder="Goooooooooooooooooooooooooooooooogol" th:value="${tokens}" name="tokens"/>
   </form>
 
   <br>
@@ -54,23 +51,14 @@
 
   <nav aria-label="Page navigation example" th:if="${not #lists.isEmpty(list)}">
     <ul class="pagination justify-content-center">
-      <li class="page-item" th:if="${page > 1}">
-        <a class="page-link" th:href="@{'/search/' + (page '-' 1)}">Previous</a>
-      </li>
-      <li class="page-item disabled" th:if="${page <= 1}">
-        <a class="page-link">Previous</a>
+
+      <li class="page-item" th:each="num : ${#numbers.sequence(1, totalPages)}">
+        <a class="page-link" th:href="@{'/search?tokens=' + ${tokens} + '&page=' + ${num}}">[[${num}]]</a>
       </li>
 
-      <li class="page-item" th:each="num : ${#numbers.sequence(1, totalPages)}"><a class="page-link" th:href="@{'/search/' + num}" th:text="${num}"/></li>
-
-      <li class="page-item" th:if="${page < totalPages}">
-        <a class="page-link" th:href="@{'/search/' + (page '+' 1)}">Next</a>
-      </li>
-      <li class="page-item disabled" th:if="${page >= totalPages}">
-        <a class="page-link">Next</a>
-      </li>
     </ul>
   </nav>
+
 
 
 </div>

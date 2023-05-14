@@ -15,6 +15,15 @@ public class Number {
         this.num = num;
     }
 
+    public int sum() {
+        this.num++;
+        return this.num;
+    }
+
+    public int sub(){
+        this.num--;
+        return this.num;
+    }
     @Override
     public String toString() {
         return "Number{" +

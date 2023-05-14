@@ -54,12 +54,23 @@ public class SearchController {
     }
 
     @GetMapping("")
-    public String searchRedirect(@RequestParam(name="tokens", defaultValue = "") String tokens, @RequestParam(name ="page", defaultValue = "-1") int page , Model model) {
+    public String searchGet(@RequestParam(name="tokens", defaultValue = "") String tokens, @RequestParam(name ="page", defaultValue = "-1") int NumPage , Model model) {
+
+        Number page = new Number();
+        page.setNum(NumPage);
+
+        System.out.println(page.getNum());
 
         System.out.println(tokens);
-        if (!tokens.equals("")) {
+        if (!tokens.equals("") || !LastSearch.getWords().equals("")) {
 
-            HashMap<Integer, ArrayList<String[]>> response = rmi.Search(tokens, page);
+            HashMap<Integer, ArrayList<String[]>> response;
+
+            if (!tokens.equals("")) {
+                response = rmi.Search(tokens, page.getNum());
+            } else {
+                response = rmi.Search(LastSearch.getWords(), page.getNum());
+            }
 
 
             if (response.get(0) != null){
@@ -74,7 +85,7 @@ public class SearchController {
             }
         }
 
-        model.addAttribute("tokens", LastSearch);
+        model.addAttribute("tokens", tokens);
         model.addAttribute("list", list);
         model.addAttribute("totalPages", TotalPages.getNum());
         model.addAttribute("page", page);

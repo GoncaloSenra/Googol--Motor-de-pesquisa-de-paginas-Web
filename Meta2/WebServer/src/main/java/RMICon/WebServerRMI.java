@@ -41,7 +41,14 @@ public class WebServerRMI extends UnicastRemoteObject {
 
         try {
             String[] tokens = url.split(" ");
-            HashMap<Integer, ArrayList<String[]>> response = h.SearchLinks(tokens , page);
+
+            HashMap<Integer, ArrayList<String[]>> response;
+
+            if (page == -1) {
+                response = h.SearchLinks(tokens , page);
+            } else {
+                response = h.SearchLinks(tokens , page - 1);
+            }
 
             return response;
         } catch (RemoteException r) {
