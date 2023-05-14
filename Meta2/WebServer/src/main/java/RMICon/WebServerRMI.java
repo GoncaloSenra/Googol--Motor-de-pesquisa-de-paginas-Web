@@ -16,6 +16,7 @@ public class WebServerRMI extends UnicastRemoteObject {
     private SMInterface h;
 
     public WebServerRMI() throws RemoteException {
+        System.out.println("NEW REGISTRY");
         try {
             this.h = (SMInterface) LocateRegistry.getRegistry(9999).lookup("WebServer");
         } catch (NotBoundException e) {
@@ -36,16 +37,13 @@ public class WebServerRMI extends UnicastRemoteObject {
 
     }
 
-    public String Search(String url) {
+    public HashMap<Integer, ArrayList<String[]>> Search(String url, int page) {
 
         try {
             String[] tokens = url.split(" ");
-            HashMap<Integer, ArrayList<String[]>> response= h.SearchLinks(tokens , -1);
+            HashMap<Integer, ArrayList<String[]>> response = h.SearchLinks(tokens , page);
 
-
-
-
-            return null;
+            return response;
         } catch (RemoteException r) {
             r.printStackTrace();
         }

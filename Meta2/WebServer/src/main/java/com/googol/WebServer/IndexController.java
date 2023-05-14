@@ -12,41 +12,27 @@ import org.springframework.web.context.WebApplicationContext;
 import RMICon.WebServerRMI;
 import forms.URL;
 
-import java.net.http.HttpRequest;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 @Controller
-public class TestController {
+@RequestMapping("/index")
+public class IndexController {
 
-    @Resource(name = "appCreateRMIRegistry")
-    private WebServerRMI rmi;
+    private final WebServerRMI rmi;
 
-    @Resource(name = "sessionSearchList")
-    private ArrayList<String[]> list;
-
-    @Bean
-    @Scope(value = WebApplicationContext.SCOPE_APPLICATION, proxyMode = ScopedProxyMode.TARGET_CLASS)
-    public WebServerRMI appCreateRMIRegistry() {
-        try {
-            System.out.println("NEW REGISTRY");
-            return new WebServerRMI();
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
-        return null;
+    public IndexController(WebServerRMI rmi) {
+        this.rmi = rmi;
     }
 
-    @Bean
-    @Scope(value = WebApplicationContext.SCOPE_SESSION, proxyMode = ScopedProxyMode.TARGET_CLASS)
-    public ArrayList<String[]> sessionSearchList() {
-        return new ArrayList<>();
-    }
-
+    /*
     @GetMapping("/")
     public String redirect() {
         return "redirect:/greeting";
     }
+    */
 
     @GetMapping("/greeting")
     public String greeting(@RequestParam(name="name", required=false, defaultValue="World") String name, Model model) {
@@ -54,7 +40,7 @@ public class TestController {
         model.addAttribute("othername", "SD");
         return "greeting";
     }
-    @GetMapping("/index")
+    @GetMapping("")
     public String index(Model model) {
 
         model.addAttribute("url", new URL());
@@ -69,24 +55,5 @@ public class TestController {
 
         return "redirect:/index";
     }
-
-    @GetMapping("/search")
-    public String searchGet(Model model) {
-
-        model.addAttribute("url", new URL());
-
-        return "search";
-    }
-
-    @PostMapping("/search")
-    public String searchPost(@ModelAttribute URL url) {
-        System.out.println(url.toString());
-
-        list = rmi.Search(url.getLink());
-
-        return "redirect:/search";
-    }
-
-
 
 }

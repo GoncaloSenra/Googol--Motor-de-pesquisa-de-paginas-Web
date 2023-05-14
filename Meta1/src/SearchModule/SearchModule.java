@@ -300,6 +300,7 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
         if (aux == null) {
             String [] mes = new String[3];
             mes[0] =  "Links not found!\n";
+            aux = new ArrayList<>();
             aux.add(mes);
             map.put(0, aux);
             return map;
