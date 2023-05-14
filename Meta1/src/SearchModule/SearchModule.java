@@ -224,13 +224,16 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
     }
 
     // Função que pesquisa por links que apontem para o link introduzido pelo utilizador
-    public String SearchPointers(String link) throws RemoteException {
+    public HashSet<String[]> SearchPointers(String link) throws RemoteException {
 
         String message = "";
         HashSet<String[]> aux;
 
         if (!activeBarrels.contains(1)){
-            return "Currently there are no barrels available!";
+            aux = new HashSet<>();
+            String[] aux2 = {"Currently there are no barrels available!", "-1", ""};
+            aux.add(aux2);
+            return aux;
         }
 
         while(true) {
@@ -251,14 +254,13 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
 
 
         if (aux == null) {
-            return "Links not found!\n";
-        } else {
-            for (String[] url: aux) {
-                message += url[1] + " - " + url[0] + "\n\""+ url[2] +"\"\n";
-            }
+            aux = new HashSet<>();
+            String[] aux2 = {"Links not found!", "-1", ""};
+            aux.add(aux2);
+            return aux;
         }
 
-        return message;
+        return aux;
     }
 
 

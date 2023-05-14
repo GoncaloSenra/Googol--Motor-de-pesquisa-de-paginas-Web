@@ -5,10 +5,8 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
+
 import SearchModule.SMInterface;
 
 public class Client extends UnicastRemoteObject implements CInterface {
@@ -176,7 +174,17 @@ public class Client extends UnicastRemoteObject implements CInterface {
                     // Pesquisa por links que apontem para o link introduzido pelo utilizador
                     else if (splited[0].equals("3")) {
                         if (logged) {
-                            response = h.SearchPointers(splited[1]);
+                            HashSet<String[]> links= h.SearchPointers(splited[1]);
+
+                            for (String[] link : links) {
+                                if (link[1].equals("-1")) {
+                                    System.out.println(link[0]);
+                                    break;
+                                } else {
+                                    System.out.println(link[1] + " - " + link[0] + "\n" + link[2] + "\n\n");
+                                }
+                            }
+
                         } else {
                             response = "You need to be logged!\n";
                         }

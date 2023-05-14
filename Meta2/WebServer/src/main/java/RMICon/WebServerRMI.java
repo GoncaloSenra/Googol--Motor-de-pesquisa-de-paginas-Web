@@ -7,6 +7,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Scanner;
 
 import SearchModule.SMInterface;
@@ -56,6 +57,26 @@ public class WebServerRMI extends UnicastRemoteObject {
         }
         return null;
 
+    }
+
+    public HashSet<String[]> SearchPointers(String url) {
+
+        try {
+            HashSet<String[]> response = h.SearchPointers(url);
+
+            for(String[] link : response) {
+                if (link[1].equals("-1")) {
+                    System.out.println("SP: " + link[0]);
+                    return null;
+                }
+            }
+
+            return response;
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
 
