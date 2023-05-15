@@ -18,9 +18,7 @@ import java.util.Map;
 import Downloader.DInterface;
 import StorageBarrel.SBInterface;
 import Client.CInterface;
-
-import javax.sql.rowset.spi.SyncResolver;
-
+import RMICon.*;
 
 public class SearchModule extends UnicastRemoteObject implements SMInterface {
 
@@ -30,6 +28,7 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
     public static ArrayList<DInterface> downloaders = new ArrayList<>();
     public static ArrayList<Integer> activeDownloaders = new ArrayList<>();
     public static ArrayList<CInterface> clients = new ArrayList<>();
+    public static WSInterface webserver;
     public HashMap<Integer, String[]> infoDownloaders = new HashMap<>();
     public HashMap<Integer, String[]> infoBarrels = new HashMap<>();
     public int chooseBarrel;
@@ -186,6 +185,21 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
         UpdateTopWords();
 
         return id;
+    }
+
+    public void NewWebServer(WSInterface Iwebserver) throws RemoteException {
+        int id;
+        webserver = Iwebserver;
+
+
+        System.out.println("NEW WEBSERVER");
+
+        webserver.UpadateDownloaders(infoDownloaders);
+
+        webserver.UpadateBarrels(infoBarrels);
+
+
+        UpdateTopWords();
     }
 
     /*
@@ -413,6 +427,12 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
                 System.out.println("Remote ex in SM.UpdateTopSearches " + e.getMessage());
             }
         }
+        try {
+            webserver.UpadateTopSearches(final_counter);
+        } catch (RemoteException e) {
+            System.out.println("Remote ex in SM.UpdateTopSearches " + e.getMessage());
+        }
+
     }
 
     // Função que envia um link dado pelo utilizador para a thread ServerUrlList (Queue) por TCP
