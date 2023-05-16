@@ -15,9 +15,26 @@
 
   <h1 style="text-align: center">Search!</h1>
 
-  <form th:action="@{/search}" method="get">
-    <input class="form-control" id="exampleDataList2" placeholder="Goooooooooooooooooooooooooooooooogol" th:value="${tokens}" name="tokens"/>
-  </form>
+
+  <div class="container text-center">
+    <div class="row justify-content-start">
+      <div class="d-grid col-6 mx-auto">
+        <form id="search-form" th:action="@{/search}" method="get">
+          <input class="form-control" id="exampleDataList1" placeholder="Goooooooooooooooooooooooooooooooogol" th:value="${tokens}" name="tokens"/>
+        </form>
+        <form id="HN" th:action="@{/HackerNews}" method="post">
+          <input type="hidden" id="exampleDataList2" placeholder="Goooooooooooooooooooooooooooooooogol" th:value="${tokens}" name="tokens"/>
+        </form>
+      </div>
+      <div class="d-grid col-3 mx-auto">
+        <button type="submit" form="search-form" class="btn btn-primary">Search</button>
+      </div>
+      <div class="d-grid col-3 mx-auto">
+          <button type="submit" form="HN" class="btn btn-primary">Index from Hacker News</button>
+      </div>
+    </div>
+  </div>
+
 
   <br>
 
