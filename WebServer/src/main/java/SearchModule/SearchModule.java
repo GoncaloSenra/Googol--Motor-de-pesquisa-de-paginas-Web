@@ -227,6 +227,9 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
         for (CInterface ci: clients){
             ci.UpadateBarrels(infoBarrels);
         }
+
+        if(webserver != null)
+            webserver.UpadateBarrels(infoBarrels);
     }
 
     public void TerminateDownloader(int id) throws RemoteException {
@@ -235,6 +238,8 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
         for (CInterface ci: clients){
             ci.UpadateDownloaders(infoDownloaders);
         }
+        if(webserver != null)
+            webserver.UpadateDownloaders(infoDownloaders);
     }
 
     public void TerminateClient(int id) throws RemoteException {

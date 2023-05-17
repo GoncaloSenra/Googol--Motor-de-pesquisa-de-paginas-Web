@@ -29,6 +29,18 @@ public class WebServerRMI extends UnicastRemoteObject implements WSInterface {
     private HashMap<Integer, String[]> infoBarrels;
     private ArrayList<String[]> topSearches;
 
+    public HashMap<Integer, String[]> getInfoDownloaders() {
+        return infoDownloaders;
+    }
+
+    public HashMap<Integer, String[]> getInfoBarrels() {
+        return infoBarrels;
+    }
+
+    public ArrayList<String[]> getTopSearches() {
+        return topSearches;
+    }
+
     /*
      *   Funções para dar update de todas as informações do painel de administração
      * */

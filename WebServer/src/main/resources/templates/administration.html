@@ -14,11 +14,33 @@
 
 <div class="container">
     <h1 style="text-align: center">Administration page!</h1>
-</div>
 
-<ul>
-    <li th:text="burro"></li>
-</ul>
+    <br>
+    <div class="row">
+        <div class="col-4">
+            <h3 style="text-align: center">Barrels</h3>
+            <p style="text-align: center" th:if="${barrels.isEmpty()}">Nothing to see here</p>
+            <ul class="list-group" th:if="${not barrels.isEmpty()}">
+                <li class="list-group-item" th:each="barrel : ${barrels.keySet()}" th:text="'ID: ' + ${barrel} + ' IP: ' + ${barrels.get(barrel)[0]}"></li>
+            </ul>
+        </div>
+        <div class="col-4">
+            <h3 style="text-align: center">Downloaders</h3>
+            <p style="text-align: center" th:if="${downloaders.isEmpty()}">Nothing to see here</p>
+            <ul class="list-group" th:if="${not downloaders.isEmpty()}">
+                <li class="list-group-item" th:each="downloader : ${downloaders.keySet()}" th:text="'ID: ' + ${downloader} + ' IP: ' + ${downloaders.get(downloader)[0]}"></li>
+            </ul>
+        </div>
+        <div class="col-4">
+            <h3 style="text-align: center">Top Searches</h3>
+            <p style="text-align: center" th:if="${topSearches.isEmpty()}">Nothing to see here</p>
+            <ul class="list-group" th:if="${not topSearches.isEmpty()}">
+                <li class="list-group-item" th:each="word : ${topSearches}" th:text="${word[0]} + ' (' + ${word[1]} +' search(es))'"></li>
+            </ul>
+        </div>
+    </div>
+
+</div>
 
 
 </body>
