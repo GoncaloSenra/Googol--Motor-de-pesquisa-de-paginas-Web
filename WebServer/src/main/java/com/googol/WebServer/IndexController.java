@@ -27,13 +27,6 @@ public class IndexController {
         this.rmi = rmi;
     }
 
-    /*
-    @GetMapping("/")
-    public String redirect() {
-        return "redirect:/greeting";
-    }
-    */
-
     @GetMapping("")
     public String index(Model model) {
 

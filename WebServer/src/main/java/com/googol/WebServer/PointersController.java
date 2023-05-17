@@ -21,6 +21,7 @@ import java.util.Map;
 
 @Controller
 @RequestMapping("/pointers")
+@Scope("session")
 public class PointersController {
 
     private final WebServerRMI rmi;
@@ -50,6 +51,8 @@ public class PointersController {
             } else {
                 list = new HashSet<>();
             }
+        } else {
+            list.clear();
         }
 
         model.addAttribute("list", list);

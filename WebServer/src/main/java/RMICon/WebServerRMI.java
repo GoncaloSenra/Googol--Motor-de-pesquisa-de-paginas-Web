@@ -47,13 +47,10 @@ public class WebServerRMI extends UnicastRemoteObject implements WSInterface {
 
     public void UpadateDownloaders(HashMap<Integer, String[]> info) throws RemoteException{
         this.infoDownloaders = info;
-        System.out.println("BURROS E LIMITADOS");
     }
 
     public void UpadateBarrels(HashMap<Integer, String[]> info) throws RemoteException {
         this.infoBarrels = info;
-        System.out.println("BURROS E LIMITADOS");
-
     }
     public void UpadateTopSearches(ArrayList<String[]> info) throws RemoteException{
         this.topSearches = info;
@@ -61,7 +58,6 @@ public class WebServerRMI extends UnicastRemoteObject implements WSInterface {
         for (String[] str : info) {
             System.out.println(str[0] + " - " + str[1]);
         }
-        System.out.println("BURROS E LIMITADOS");
     }
 
     public WebServerRMI() throws RemoteException {

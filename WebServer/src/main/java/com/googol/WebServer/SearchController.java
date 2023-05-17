@@ -20,6 +20,7 @@ import java.util.Map;
 
 @Controller
 @RequestMapping("/search")
+@Scope("session")
 public class SearchController {
 
     private final WebServerRMI rmi;
@@ -66,8 +67,16 @@ public class SearchController {
 
             if (!tokens.equals("")) {
                 response = rmi.Search(tokens, page.getNum());
-            } else {
+            } else if (!LastSearch.getWords().equals("")) {
+                System.out.println("ali");
                 response = rmi.Search(LastSearch.getWords(), page.getNum());
+            } else {
+                response = new HashMap<>();
+                ArrayList<String[]> aux = new ArrayList<>();
+                String[] aux2 = {"", "", ""};
+                aux.add(aux2);
+                response.put(0, aux);
+
             }
 
 
@@ -81,6 +90,9 @@ public class SearchController {
                     list = entry.getValue();
                 }
             }
+        } else {
+            list.clear();
+            TotalPages.setNum(0);
         }
 
         model.addAttribute("tokens", tokens);
@@ -90,37 +102,5 @@ public class SearchController {
 
         return "search";
     }
-    /*
-    @GetMapping("/{page}")
-    public String searchGet(Model model, @PathVariable int page) {
-
-
-
-        return "search";
-    }
-    */
-    /*
-    @PostMapping("")
-    public String searchPost(@ModelAttribute Tokens search, @ModelAttribute(value = "-1") int page) {
-        System.out.println(search.toString());
-
-        HashMap<Integer, ArrayList<String[]>> response = rmi.Search(search.getWords(), page);
-
-
-        if (response.get(0) != null){
-            TotalPages = new Number();
-            list.clear();
-            LastSearch = new Tokens();
-        } else {
-            for (Map.Entry<Integer, ArrayList<String[]>> entry : response.entrySet()) {
-                TotalPages.setNum(entry.getKey());
-                list = entry.getValue();
-            }
-        }
-
-
-        return "redirect:/search/" + page;
-    }
-    */
 
 }
