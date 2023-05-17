@@ -1,13 +1,9 @@
 let stompClient = null;
 
 function setConnected(connected) {
-    $("#connect").prop("disabled", connected);
-    $("#disconnect").prop("disabled", !connected);
-    if (connected) {
-        $("#conversation").show();
-    } else {
-        $("#conversation").hide();
-    }
+
+    $("#conversation").show();
+
     $("#messages").html("");
 }
 
@@ -21,14 +17,6 @@ function connect() {
             showMessage(JSON.parse(message.body).content);
         });
     });
-}
-
-function disconnect() {
-    if (stompClient !== null) {
-        stompClient.disconnect();
-    }
-    setConnected(false);
-    console.log("Disconnected");
 }
 
 function sendMessage() {

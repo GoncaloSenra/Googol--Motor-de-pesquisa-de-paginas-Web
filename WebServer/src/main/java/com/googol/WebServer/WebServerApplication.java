@@ -1,5 +1,6 @@
 package com.googol.WebServer;
 
+import RMICon.WSInterface;
 import RMICon.WebServerRMI;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -18,6 +19,8 @@ public class WebServerApplication {
 
 	@Bean
 	public WebServerRMI initRMI() throws RemoteException {
-		return new WebServerRMI();
+		WebServerRMI ws = new WebServerRMI();
+		ws.getH().NewWebServer((WSInterface) ws);
+		return ws;
 	}
 }

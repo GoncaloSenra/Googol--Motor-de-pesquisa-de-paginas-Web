@@ -19,6 +19,7 @@ import Downloader.DInterface;
 import StorageBarrel.SBInterface;
 import Client.CInterface;
 import RMICon.WSInterface;
+import com.googol.WebServer.Message;
 
 public class SearchModule extends UnicastRemoteObject implements SMInterface {
 
@@ -108,7 +109,8 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
         for (CInterface ci: clients){
             ci.UpadateBarrels(infoBarrels);
         }
-
+        if (webserver != null)
+            webserver.UpadateBarrels(infoBarrels);
         //UpdateTopWords();
 
         System.out.println("NEW BARREL -> " + id);
@@ -163,6 +165,8 @@ public class SearchModule extends UnicastRemoteObject implements SMInterface {
         for (CInterface ci: clients){
             ci.UpadateDownloaders(infoDownloaders);
         }
+        if (webserver != null)
+            webserver.UpadateDownloaders(infoDownloaders);
 
         System.out.println("NEW DOWNLOADER -> " + id);
         return id;

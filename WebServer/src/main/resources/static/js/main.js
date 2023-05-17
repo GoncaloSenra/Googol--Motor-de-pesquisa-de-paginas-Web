@@ -13,6 +13,7 @@ class CustomNavBar extends HTMLElement {
             '      <li class="nav-item"><a href="/admin" class="nav-link">Administration</a></li>\n' +
             '      <li class="nav-item"><a href="/index" class="nav-link">Index</a></li>\n' +
             '      <li class="nav-item"><a href="/pointers" class="nav-link">Pointer links</a></li>\n' +
+            '      <li class="nav-item"><a href="/HackerNews/users" class="nav-link">Index User Stories</a></li>\n' +
             '    </ul>\n' +
             '  </header>\n' +
             '</div>'

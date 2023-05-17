@@ -11,10 +11,19 @@ import java.util.HashSet;
 import java.util.Scanner;
 
 import SearchModule.SMInterface;
+import com.googol.WebServer.Message;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.util.HtmlUtils;
 
 public class WebServerRMI extends UnicastRemoteObject implements WSInterface {
 
     private SMInterface h;
+
+    public SMInterface getH() {
+        return h;
+    }
 
     private HashMap<Integer, String[]> infoDownloaders;
     private HashMap<Integer, String[]> infoBarrels;
@@ -23,11 +32,16 @@ public class WebServerRMI extends UnicastRemoteObject implements WSInterface {
     /*
      *   Funções para dar update de todas as informações do painel de administração
      * */
+
     public void UpadateDownloaders(HashMap<Integer, String[]> info) throws RemoteException{
         this.infoDownloaders = info;
+        System.out.println("BURROS E LIMITADOS");
     }
-    public void UpadateBarrels(HashMap<Integer, String[]> info) throws RemoteException{
+
+    public void UpadateBarrels(HashMap<Integer, String[]> info) throws RemoteException {
         this.infoBarrels = info;
+        System.out.println("BURROS E LIMITADOS");
+
     }
     public void UpadateTopSearches(ArrayList<String[]> info) throws RemoteException{
         this.topSearches = info;
@@ -35,6 +49,7 @@ public class WebServerRMI extends UnicastRemoteObject implements WSInterface {
         for (String[] str : info) {
             System.out.println(str[0] + " - " + str[1]);
         }
+        System.out.println("BURROS E LIMITADOS");
     }
 
     public WebServerRMI() throws RemoteException {
