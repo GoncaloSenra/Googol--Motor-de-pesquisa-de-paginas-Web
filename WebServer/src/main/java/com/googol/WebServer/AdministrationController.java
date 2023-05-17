@@ -22,15 +22,11 @@ public class AdministrationController {
         this.rmi = rmi;
     }
 
-    /*
-    @MessageMapping("/message")
-    @SendTo("/topic/messages")
-    public Message onMessage(Message message) throws InterruptedException {
-        System.out.println("Message received " + message);
-        Thread.sleep(1000);
-        return new Message(HtmlUtils.htmlEscape(message.content()));
-    }
-    */
+    /**
+     * Endpoint para a página de administração
+     * @param model
+     * @return
+     */
     @GetMapping("")
     public String adminGet(Model model) {
 

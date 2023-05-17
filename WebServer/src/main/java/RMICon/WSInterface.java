@@ -1,7 +1,5 @@
 package RMICon;
 
-import com.googol.WebServer.Message;
-
 import java.rmi.Remote;
 import java.util.ArrayList;
 import java.util.HashMap;

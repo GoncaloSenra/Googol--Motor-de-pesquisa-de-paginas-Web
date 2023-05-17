@@ -39,6 +39,12 @@ public class PointersController {
         return new HashSet<>();
     }
 
+    /**
+     * Endpoint que mostra links que apontem para o link introduzido pelo utilizador
+     * @param url
+     * @param model
+     * @return
+     */
     @GetMapping("")
     public String pointersGet(@RequestParam(name="tokens", defaultValue = "") String url, Model model) {
 

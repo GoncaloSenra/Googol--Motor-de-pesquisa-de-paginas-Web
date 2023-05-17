@@ -27,6 +27,11 @@ public class IndexController {
         this.rmi = rmi;
     }
 
+    /**
+     * Endpoint que apresenta o template de indexar ("index.html")
+     * @param model
+     * @return
+     */
     @GetMapping("")
     public String index(Model model) {
 
@@ -35,8 +40,14 @@ public class IndexController {
         return "index";
     }
 
+    /**
+     * Endpoint para receber o link a indexar e enviá-lo para o Search Module
+     * @param url
+     * @return
+     */
     @PostMapping("/send_url")
     public String sendURL(@ModelAttribute URL url) {
+
         System.out.println(url.toString());
         rmi.IndexLink(url.getLink());
 

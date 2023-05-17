@@ -17,6 +17,11 @@ public class WebServerApplication {
 		SpringApplication.run(WebServerApplication.class, args);
 	}
 
+	/**
+	 * Cria e incializa um objeto WebServerRMI, (responsavel pela comunicaçao com o Search Module)
+	 * @return
+	 * @throws RemoteException
+	 */
 	@Bean
 	public WebServerRMI initRMI() throws RemoteException {
 		WebServerRMI ws = new WebServerRMI();

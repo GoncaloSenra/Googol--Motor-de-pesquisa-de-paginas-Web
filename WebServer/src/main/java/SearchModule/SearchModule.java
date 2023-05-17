@@ -19,7 +19,6 @@ import Downloader.DInterface;
 import StorageBarrel.SBInterface;
 import Client.CInterface;
 import RMICon.WSInterface;
-import com.googol.WebServer.Message;
 
 public class SearchModule extends UnicastRemoteObject implements SMInterface {
 

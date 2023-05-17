@@ -54,6 +54,14 @@ public class SearchController {
         return new Tokens();
     }
 
+    /**
+     * Endpoint que recebe os termos da pesquisa e apresenta para o ecra os links que conteem esses termos,
+     * ordenados por ordem de relevancia e em grupos de 10 em 10
+     * @param tokens
+     * @param NumPage
+     * @param model
+     * @return
+     */
     @GetMapping("")
     public String searchGet(@RequestParam(name="tokens", defaultValue = "") String tokens, @RequestParam(name ="page", defaultValue = "-1") int NumPage , Model model) {
 

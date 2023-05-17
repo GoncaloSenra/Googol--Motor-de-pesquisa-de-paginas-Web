@@ -8,6 +8,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class MainController {
 
 
+    /**
+     * Redireciona para a página de pesquisa
+     * @return
+     */
     @GetMapping("/")
     public String redirect() {
 

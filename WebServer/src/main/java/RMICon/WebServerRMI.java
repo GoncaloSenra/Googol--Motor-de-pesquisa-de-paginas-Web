@@ -11,16 +11,15 @@ import java.util.HashSet;
 import java.util.Scanner;
 
 import SearchModule.SMInterface;
-import com.googol.WebServer.Message;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.util.HtmlUtils;
 
 public class WebServerRMI extends UnicastRemoteObject implements WSInterface {
 
     private SMInterface h;
 
+    /**
+     * SMInterface Getter
+     * @return
+     */
     public SMInterface getH() {
         return h;
     }
@@ -29,29 +28,53 @@ public class WebServerRMI extends UnicastRemoteObject implements WSInterface {
     private HashMap<Integer, String[]> infoBarrels;
     private ArrayList<String[]> topSearches;
 
+    /**
+     * InfoDownloaders Getter
+     * @return
+     */
     public HashMap<Integer, String[]> getInfoDownloaders() {
         return infoDownloaders;
     }
 
+    /**
+     * InfoBarrels Getter
+     * @return
+     */
     public HashMap<Integer, String[]> getInfoBarrels() {
         return infoBarrels;
     }
 
+    /**
+     * TopSearches Getter
+     * @return
+     */
     public ArrayList<String[]> getTopSearches() {
         return topSearches;
     }
 
-    /*
-     *   Funções para dar update de todas as informações do painel de administração
-     * */
-
+    /**
+     * Função chamada remotamente pelo SearchModule para atualizar a informação dos downloaders
+     * @param info
+     * @throws RemoteException
+     */
     public void UpadateDownloaders(HashMap<Integer, String[]> info) throws RemoteException{
         this.infoDownloaders = info;
     }
 
+    /**
+     * Função chamada remotamente pelo SearchModule para atualizar a informação dos barrels
+     * @param info
+     * @throws RemoteException
+     */
     public void UpadateBarrels(HashMap<Integer, String[]> info) throws RemoteException {
         this.infoBarrels = info;
     }
+
+    /**
+     * Função chamada remotamente pelo SearchModule para atualizar a informação das TopSearches
+     * @param info
+     * @throws RemoteException
+     */
     public void UpadateTopSearches(ArrayList<String[]> info) throws RemoteException{
         this.topSearches = info;
 
@@ -60,6 +83,10 @@ public class WebServerRMI extends UnicastRemoteObject implements WSInterface {
         }
     }
 
+    /**
+     * Construtor
+     * @throws RemoteException
+     */
     public WebServerRMI() throws RemoteException {
         System.out.println("NEW REGISTRY");
         try {
@@ -69,6 +96,11 @@ public class WebServerRMI extends UnicastRemoteObject implements WSInterface {
         }
     }
 
+    /**
+     * Função que comunica com o Search Module para indexar um link
+     * @param url
+     * @return
+     */
     public String IndexLink(String url) {
 
         try {
@@ -82,6 +114,12 @@ public class WebServerRMI extends UnicastRemoteObject implements WSInterface {
 
     }
 
+    /**
+     * Função que comunica com o Search Module para fazer uma pesaquisa
+     * @param url
+     * @param page
+     * @return
+     */
     public HashMap<Integer, ArrayList<String[]>> Search(String url, int page) {
 
         try {
@@ -103,6 +141,11 @@ public class WebServerRMI extends UnicastRemoteObject implements WSInterface {
 
     }
 
+    /**
+     * Função que comunica com o Search Module para procurar links que apontem para um link
+     * @param url
+     * @return
+     */
     public HashSet<String[]> SearchPointers(String url) {
 
         try {
